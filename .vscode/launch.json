@@ -1,0 +1,99 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Current File",
+      "request": "launch",
+      "mainClass": "${file}"
+    },
+    {
+      "type": "java",
+      "name": "CPClient",
+      "request": "launch",
+      "mainClass": "apps.CPClient",
+      "projectName": "internetworkings_hands_on",
+      "args": "5000"
+    },
+    {
+      "type": "java",
+      "name": "CPCookieServer",
+      "request": "launch",
+      "mainClass": "apps.CPCookieServer",
+      "projectName": "internetworkings_hands_on"
+    },
+    {
+      "type": "java",
+      "name": "SimplexPhyClient",
+      "request": "launch",
+      "mainClass": "apps.SimplexPhyClient",
+      "projectName": "internetworkings_hands_on"
+    },
+    {
+      "type": "java",
+      "name": "SimplexPhyServer",
+      "request": "launch",
+      "mainClass": "apps.SimplexPhyServer",
+      "projectName": "internetworkings_hands_on"
+    },
+    {
+      "type": "java",
+      "name": "MonolithicEchoPhyClient",
+      "request": "launch",
+      "mainClass": "examples.MonolithicEchoPhyClient",
+      "projectName": "internetworkings_hands_on"
+    },
+    {
+      "type": "java",
+      "name": "MonolithicEchoPhyServer",
+      "request": "launch",
+      "mainClass": "examples.MonolithicEchoPhyServer",
+      "projectName": "internetworkings_hands_on"
+    },
+    {
+      "type": "java",
+      "name": "PhyAllInOne",
+      "request": "launch",
+      "mainClass": "examples.PhyAllInOne",
+      "projectName": "internetworkings_hands_on"
+    },
+    {
+      "type": "java",
+      "name": "PhyPingClient",
+      "request": "launch",
+      "mainClass": "examples.PhyPingClient",
+      "projectName": "internetworkings_hands_on"
+    },
+    {
+      "type": "java",
+      "name": "PhyPingServer",
+      "request": "launch",
+      "mainClass": "examples.PhyPingServer",
+      "projectName": "internetworkings_hands_on"
+    },
+    {
+      "type": "java",
+      "name": "UDPAllInOne",
+      "request": "launch",
+      "mainClass": "examples.UDPAllInOne",
+      "projectName": "internetworkings_hands_on"
+    },
+    {
+      "type": "java",
+      "name": "UDPEchoClient",
+      "request": "launch",
+      "mainClass": "examples.UDPEchoClient",
+      "projectName": "internetworkings_hands_on"
+    },
+    {
+      "type": "java",
+      "name": "UDPEchoServer",
+      "request": "launch",
+      "mainClass": "examples.UDPEchoServer",
+      "projectName": "internetworkings_hands_on"
+    }
+  ]
+}
