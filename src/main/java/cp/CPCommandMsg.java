@@ -1,26 +1,28 @@
 package cp;
 
 import core.Msg;
-import exceptions.IWProtocolException;
 import exceptions.IllegalMsgException;
 
-import java.util.zip.CRC32;
-import java.util.zip.Checksum;
+class CPCommandMsg extends CPMsg {
+    protected static final String CP_CMD_HEADER = "command";
 
-class CPCommandMsg extends Msg {
-    protected static final String CP_HEADER = "cp";
-
+    /*
+     * Create command message.
+     * The cp header is prepended in the super-class.
+     */
     @Override
-    protected void create(String sentence) {
-        data = CP_HEADER + " " + sentence;
-        this.dataBytes = data.getBytes();
+    protected void create(String data) {
+        // prepend command header
+        data = CP_CMD_HEADER + data;
+        // super class prepends cp header
+        super.create(data);
     }
 
     @Override
-    protected Msg parse(String sentence) throws IWProtocolException {
-        CPCommandMsg parsedMsg;
-        parsedMsg = new CPCommandMsg();
-        return parsedMsg;
+    protected Msg parse(String sentence) throws IllegalMsgException {
+        if (!sentence.startsWith(CP_CMD_HEADER)) {
+            throw new IllegalMsgException();
+        }
+        return this;
     }
-
 }
