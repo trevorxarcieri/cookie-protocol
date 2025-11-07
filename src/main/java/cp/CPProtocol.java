@@ -35,7 +35,9 @@ public class CPProtocol extends Protocol {
         this.PhyProto = phyP;
         this.role = cp_role.CLIENT;
         this.cookie = -1;
+        this.id = 0;
     }
+
     // Constructor for servers
     public CPProtocol(PhyProtocol phyP, boolean isCookieServer) {
         this.PhyProto = phyP;
@@ -53,25 +55,27 @@ public class CPProtocol extends Protocol {
         this.PhyConfigCookieServer = new PhyConfiguration(rname, rp, proto_id.CP);
     }
 
-
     @Override
     public void send(String s, Configuration config) throws IOException, IWProtocolException {
-        CPCommandMsg msg= new CPCommandMsg();
-
-        if (cookie < 0) {
-            // Request a new cookie from server
-            // Either updates the cookie attribute or returns with an exception
-            requestCookie();
+        switch (this.role) {
+            case CLIENT:
+                if (cookie < 0) // if no valid cookie, request one
+                    requestCookie();
+                CPCommandMsg msg = new CPCommandMsg(this.id, this.cookie);
+                msg.create(s);
+                this.PhyProto.send(msg.getData(), config);
+                break;
+            default:
+                System.out.println("Send method not implemented for role " + this.role + ".");
+                break;
         }
-
-        // Task 1.2.1: complete send method
-
     }
 
     @Override
     public Msg receive() throws IOException, IWProtocolException {
         CPMsg cpmIn = null;
 
+        // TODO: RESUME HERE
         // Task 1.2.1: implement receive method
 
         // Task 2.1.1: enhance receive method
@@ -87,12 +91,10 @@ public class CPProtocol extends Protocol {
         return stored;
     }
 
-
     // Processing of the CookieRequestMsg
     private void cookie_process(CPMsg cpmIn) throws IWProtocolException, IOException {
 
     }
-
 
     // Method for the client to request a cookie
     public void requestCookie() throws IOException, IWProtocolException {
@@ -102,7 +104,7 @@ public class CPProtocol extends Protocol {
 
         boolean waitForResp = true;
         int count = 0;
-        while(waitForResp && count < 3) {
+        while (waitForResp && count < 3) {
             this.PhyProto.send(new String(reqMsg.getDataBytes()), this.PhyConfigCookieServer);
 
             try {
@@ -110,7 +112,7 @@ public class CPProtocol extends Protocol {
                 if (((PhyConfiguration) in.getConfiguration()).getPid() != proto_id.CP)
                     continue;
                 resMsg = ((CPMsg) resMsg).parse(in.getData());
-                if(resMsg instanceof CPCookieResponseMsg)
+                if (resMsg instanceof CPCookieResponseMsg)
                     waitForResp = false;
             } catch (SocketTimeoutException e) {
                 count += 1;
@@ -118,13 +120,13 @@ public class CPProtocol extends Protocol {
             }
         }
 
-        if(count == 3)
+        if (count == 3)
             throw new CookieRequestException();
-        if(resMsg instanceof CPCookieResponseMsg && !((CPCookieResponseMsg) resMsg).getSuccess()) {
+        if (resMsg instanceof CPCookieResponseMsg && !((CPCookieResponseMsg) resMsg).getSuccess()) {
             throw new CookieRequestException();
         }
-         assert resMsg instanceof CPCookieResponseMsg;
-         this.cookie = ((CPCookieResponseMsg)resMsg).getCookie();
+        assert resMsg instanceof CPCookieResponseMsg;
+        this.cookie = ((CPCookieResponseMsg) resMsg).getCookie();
     }
 }
 
@@ -141,6 +143,7 @@ class Cookie {
         return timeOfCreation;
     }
 
-    public int getCookieValue() { return cookieValue;}
+    public int getCookieValue() {
+        return cookieValue;
+    }
 }
-
