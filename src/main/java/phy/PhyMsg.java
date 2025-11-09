@@ -13,13 +13,17 @@ public class PhyMsg extends Msg {
 	protected static final String PHY_HEADER = "phy";
 	protected Protocol.proto_id pid;
 
-	protected PhyMsg() {}
+	protected PhyMsg() {
+	}
+
 	protected PhyMsg(PhyConfiguration config) {
 		super();
 		this.config = config;
 	}
 
-	protected Protocol.proto_id getPid() {return this.pid;}
+	protected Protocol.proto_id getPid() {
+		return this.pid;
+	}
 
 	/*
 	 * Prepend header for sending
@@ -35,13 +39,13 @@ public class PhyMsg extends Msg {
 			case SLP -> 5;
 			case CP -> 7;
 		};
-		data = PHY_HEADER + " " + id + " " +data;
+		data = PHY_HEADER + " " + id + " " + data;
 		this.dataBytes = data.getBytes();
 	}
-	
+
 	/*
 	 * Does the message start with the correct header
-	 *  -> if not illegal message
+	 * -> if not illegal message
 	 * Remove header and populate data attribute
 	 */
 	@Override
@@ -60,7 +64,7 @@ public class PhyMsg extends Msg {
 		} catch (NumberFormatException e) {
 			throw new IllegalMsgException();
 		}
-		//Check protocol id
+		// Check protocol id
 		switch (id) {
 			case 1 -> pid = Protocol.proto_id.PHY;
 			case 3 -> pid = Protocol.proto_id.APP;
@@ -69,7 +73,7 @@ public class PhyMsg extends Msg {
 			default -> throw new IllegalMsgException();
 		}
 		// If the second token is "1", call the PhyPingMsg parser
-		if(pid == Protocol.proto_id.PHY && parts[2].startsWith(PhyPingMsg.PHY_PING_HEADER)) {
+		if (pid == Protocol.proto_id.PHY && parts[2].startsWith(PhyPingMsg.PHY_PING_HEADER)) {
 			pdu = new PhyPingMsg((PhyConfiguration) this.config);
 			pdu.parse(parts[2]);
 		} else {
@@ -78,5 +82,5 @@ public class PhyMsg extends Msg {
 		}
 		return pdu;
 	}
-	
+
 }
