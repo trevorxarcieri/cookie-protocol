@@ -55,15 +55,20 @@ public class CPProtocol extends Protocol {
         this.PhyConfigCookieServer = new PhyConfiguration(rname, rp, proto_id.CP);
     }
 
+    public void setId(int newId) {
+        this.id = newId;
+    }
+
     @Override
     public void send(String s, Configuration config) throws IOException, IWProtocolException {
         switch (this.role) {
             case CLIENT:
-                if (cookie < 0) // if no valid cookie, request one
+                if (this.cookie < 0) // if no valid cookie, request one
                     requestCookie();
                 CPCommandMsg msg = new CPCommandMsg(this.id, this.cookie);
                 msg.create(s);
-                this.PhyProto.send(msg.getData(), config);
+                this.PhyProto.send(msg.getData(), this.PhyConfigCommandServer);
+                this.id++; // guarantee next send will have higher id
                 break;
             default:
                 System.out.println("Send method not implemented for role " + this.role + ".");
@@ -73,14 +78,40 @@ public class CPProtocol extends Protocol {
 
     @Override
     public Msg receive() throws IOException, IWProtocolException {
-        CPMsg cpmIn = null;
+        Msg resMsg = new CPMsg();
 
-        // TODO: RESUME HERE
-        // Task 1.2.1: implement receive method
+        switch (this.role) {
+            case CLIENT:
+                int i = 0;
+                while (i < 3) { // try to receive up to 3 times
+                    try {
+                        Msg in = this.PhyProto.receive(CP_TIMEOUT);
+                        if (((PhyConfiguration) in.getConfiguration()).getPid() != proto_id.CP) // if not CP protocol
+                            continue; // do not count this as a try
+                        resMsg = ((CPMsg) resMsg).parse(in.getData());
+                        if (resMsg instanceof CPCommandResponseMsg
+                                && ((CPCommandResponseMsg) resMsg).getId() == this.id - 1) {
+                            if (!((CPCommandResponseMsg) resMsg).getSuccess())
+                                break; // command was rejected, so cookie timed out
+                            return resMsg;
+                        }
+                    } catch (SocketTimeoutException e) {
+                        i++;
+                    } catch (IWProtocolException ignored) {
+                    }
+                }
+                if (i == 3) // if all 3 tries timed out
+                    throw new ReceiveCommandException(); // unable to receive command
+                throw new CookieTimeoutException(); // otherwise, we must've hit the break due to a timed-out cookie and
+                                                    // thus a rejected command
+            default:
+                System.out.println("Send method not implemented for role " + this.role + ".");
+                break;
+        }
 
         // Task 2.1.1: enhance receive method
 
-        return cpmIn;
+        return resMsg;
     }
 
     // CookieServer processing of incoming messages
@@ -102,7 +133,7 @@ public class CPProtocol extends Protocol {
         reqMsg.create(null);
         Msg resMsg = new CPMsg();
 
-        boolean waitForResp = true;
+        boolean waitForResp = true; // TODO: remove and just use break
         int count = 0;
         while (waitForResp && count < 3) {
             this.PhyProto.send(new String(reqMsg.getDataBytes()), this.PhyConfigCookieServer);
