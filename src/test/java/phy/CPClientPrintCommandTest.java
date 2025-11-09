@@ -42,19 +42,20 @@ public class CPClientPrintCommandTest {
         }
         // Set up the object-under-test
         cProtocol = new CPProtocol(InetAddress.getByName(serverName), serverPort, phyProtocolMock);
+        cProtocol.setId(1); // set id to 1, as if the client just sent a command and is poised to receive
     }
 
     @Test
     void testCommandResponseOk() throws IWProtocolException, IOException {
         // Fill the message object that is going to be returned to the object-under-test
         // with the message needed for this test case
-        testMsg = (PhyMsg)testMsg.parse("phy 7 cp command_response 0 ok 0 2368828647");
+        testMsg = (PhyMsg) testMsg.parse("phy 7 cp command_response 0 ok 0 2368828647");
 
         // Implement behavior of the mocked object
         when(phyProtocolMock.receive(anyInt())).thenReturn(testMsg);
 
         // Run the test
-        assertDoesNotThrow(()->cProtocol.receive());
+        assertDoesNotThrow(() -> cProtocol.receive());
 
         // verify a specified behavior
         verify(phyProtocolMock, times(1)).receive(2000);
@@ -64,14 +65,14 @@ public class CPClientPrintCommandTest {
     void testCommandResponseError() throws IWProtocolException, IOException {
         // Fill the message object that is going to be returned to the object-under-test
         // with the message needed for this test case
-        testMsg = (PhyMsg)testMsg.parse("phy 7 cp command_response 0 error 0 4233987072");
+        testMsg = (PhyMsg) testMsg.parse("phy 7 cp command_response 0 error 0 4233987072");
 
         // Implement behavior of the mocked object
         when(phyProtocolMock.receive(anyInt())).thenReturn(testMsg);
 
         // Run the test
         assertThrows(CookieTimeoutException.class,
-                ()->cProtocol.receive());
+                () -> cProtocol.receive());
 
         // verify a specified behavior
         verify(phyProtocolMock, times(1)).receive(2000);
@@ -81,14 +82,14 @@ public class CPClientPrintCommandTest {
     void testCommandResponseErrorWithMessage() throws IWProtocolException, IOException {
         // Fill the message object that is going to be returned to the object-under-test
         // with the message needed for this test case
-        testMsg = (PhyMsg)testMsg.parse("phy 7 cp command_response 0 error 16 Out of Resources 367825814");
+        testMsg = (PhyMsg) testMsg.parse("phy 7 cp command_response 0 error 16 Out of Resources 367825814");
 
         // Implement behavior of the mocked object
         when(phyProtocolMock.receive(anyInt())).thenReturn(testMsg);
 
         // Run the test
         assertThrows(CookieTimeoutException.class,
-                ()->cProtocol.receive());
+                () -> cProtocol.receive());
 
         // verify a specified behavior
         verify(phyProtocolMock, times(1)).receive(2000);
@@ -98,14 +99,14 @@ public class CPClientPrintCommandTest {
     void testCommandResponseOkWithMissingField() throws IWProtocolException, IOException {
         // Fill the message object that is going to be returned to the object-under-test
         // with the message needed for this test case
-        testMsg = (PhyMsg)testMsg.parse("phy 7 cp command_response 0 ok 0 2368828647");
-        corruptMsg = (PhyMsg)corruptMsg.parse("phy 7 cp command_response 0 4003252835");
+        testMsg = (PhyMsg) testMsg.parse("phy 7 cp command_response 0 ok 0 2368828647");
+        corruptMsg = (PhyMsg) corruptMsg.parse("phy 7 cp command_response 0 4003252835");
 
         // Implement behavior of the mocked object
         when(phyProtocolMock.receive(anyInt())).thenReturn(corruptMsg).thenReturn(testMsg);
 
         // Run the test
-        assertDoesNotThrow(()->cProtocol.receive());
+        assertDoesNotThrow(() -> cProtocol.receive());
 
         // verify a specified behavior
         verify(phyProtocolMock, times(2)).receive(2000);
@@ -115,14 +116,14 @@ public class CPClientPrintCommandTest {
     void testCommandResponseOkWithIllegalField() throws IWProtocolException, IOException {
         // Fill the message object that is going to be returned to the object-under-test
         // with the message needed for this test case
-        testMsg = (PhyMsg)testMsg.parse("phy 7 cp command_response 0 ok 0 2368828647");
-        corruptMsg = (PhyMsg)corruptMsg.parse("phy 7 cp command_response 1 ok Null 4003252835");
+        testMsg = (PhyMsg) testMsg.parse("phy 7 cp command_response 0 ok 0 2368828647");
+        corruptMsg = (PhyMsg) corruptMsg.parse("phy 7 cp command_response 1 ok Null 4003252835");
 
         // Implement behavior of the mocked object
         when(phyProtocolMock.receive(anyInt())).thenReturn(corruptMsg).thenReturn(testMsg);
 
         // Run the test
-        assertDoesNotThrow(()->cProtocol.receive());
+        assertDoesNotThrow(() -> cProtocol.receive());
 
         // verify a specified behavior
         verify(phyProtocolMock, times(2)).receive(2000);
@@ -132,14 +133,14 @@ public class CPClientPrintCommandTest {
     void testCommandResponseOkWithIllegalChecksum() throws IWProtocolException, IOException {
         // Fill the message object that is going to be returned to the object-under-test
         // with the message needed for this test case
-        testMsg = (PhyMsg)testMsg.parse("phy 7 cp command_response 0 ok 0 2368828647");
-        corruptMsg = (PhyMsg)corruptMsg.parse("phy 7 cp command_response 1 ok 0 400325283");
+        testMsg = (PhyMsg) testMsg.parse("phy 7 cp command_response 0 ok 0 2368828647");
+        corruptMsg = (PhyMsg) corruptMsg.parse("phy 7 cp command_response 1 ok 0 400325283");
 
         // Implement behavior of the mocked object
         when(phyProtocolMock.receive(anyInt())).thenReturn(corruptMsg).thenReturn(testMsg);
 
         // Run the test
-        assertDoesNotThrow(()->cProtocol.receive());
+        assertDoesNotThrow(() -> cProtocol.receive());
 
         // verify a specified behavior
         verify(phyProtocolMock, times(2)).receive(2000);
@@ -149,14 +150,14 @@ public class CPClientPrintCommandTest {
     void testCommandResponseOkWithTooLongMessage() throws IWProtocolException, IOException {
         // Fill the message object that is going to be returned to the object-under-test
         // with the message needed for this test case
-        testMsg = (PhyMsg)testMsg.parse("phy 7 cp command_response 0 ok 0 2368828647");
-        corruptMsg = (PhyMsg)corruptMsg.parse("phy 7 cp command_response 1 ok 0 Hello 4003252835");
+        testMsg = (PhyMsg) testMsg.parse("phy 7 cp command_response 0 ok 0 2368828647");
+        corruptMsg = (PhyMsg) corruptMsg.parse("phy 7 cp command_response 1 ok 0 Hello 4003252835");
 
         // Implement behavior of the mocked object
         when(phyProtocolMock.receive(anyInt())).thenReturn(corruptMsg).thenReturn(testMsg);
 
         // Run the test
-        assertDoesNotThrow(()->cProtocol.receive());
+        assertDoesNotThrow(() -> cProtocol.receive());
 
         // verify a specified behavior
         verify(phyProtocolMock, times(2)).receive(2000);
@@ -166,14 +167,14 @@ public class CPClientPrintCommandTest {
     void testCommandResponseOkWithTooShortMessage() throws IWProtocolException, IOException {
         // Fill the message object that is going to be returned to the object-under-test
         // with the message needed for this test case
-        testMsg = (PhyMsg)testMsg.parse("phy 7 cp command_response 0 ok 0 2368828647");
-        corruptMsg = (PhyMsg)corruptMsg.parse("phy 7 cp command_response 1 ok 10 Hello 4003252835");
+        testMsg = (PhyMsg) testMsg.parse("phy 7 cp command_response 0 ok 0 2368828647");
+        corruptMsg = (PhyMsg) corruptMsg.parse("phy 7 cp command_response 1 ok 10 Hello 4003252835");
 
         // Implement behavior of the mocked object
         when(phyProtocolMock.receive(anyInt())).thenReturn(corruptMsg).thenReturn(testMsg);
 
         // Run the test
-        assertDoesNotThrow(()->cProtocol.receive());
+        assertDoesNotThrow(() -> cProtocol.receive());
 
         // verify a specified behavior
         verify(phyProtocolMock, times(2)).receive(2000);
