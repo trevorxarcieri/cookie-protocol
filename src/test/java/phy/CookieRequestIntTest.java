@@ -16,6 +16,7 @@ import java.net.InetAddress;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.MockedConstruction;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import cp.CPProtocol;
@@ -36,14 +37,15 @@ public class CookieRequestIntTest {
         byte[] sb = "phy 7 cp cookie_response ACK 12345".getBytes();
 
         // Patch socket constructor to allow behavior of the mocked socket
-        mockConstruction(DatagramSocket.class, (mock, ctx) -> {
-            doAnswer(inv -> {
-                DatagramPacket p = inv.getArgument(0);
-                p.setData(sb);
-                return null;
-            }).when(mock).receive(any(DatagramPacket.class));
-            doNothing().when(mock).send(any(DatagramPacket.class));
-        });
+        MockedConstruction<DatagramSocket> socketConstructorMock = mockConstruction(DatagramSocket.class,
+                (mock, ctx) -> {
+                    doAnswer(inv -> {
+                        DatagramPacket p = inv.getArgument(0);
+                        p.setData(sb);
+                        return null;
+                    }).when(mock).receive(any(DatagramPacket.class));
+                    doNothing().when(mock).send(any(DatagramPacket.class));
+                });
 
         // Set up the object-under-test
         phyProtocol = new PhyProtocol(5001);
@@ -61,6 +63,8 @@ public class CookieRequestIntTest {
             return (int) vh.get(cProtocol);
         });
         assertEquals(12345, value);
+
+        socketConstructorMock.close();
     }
 
 }
