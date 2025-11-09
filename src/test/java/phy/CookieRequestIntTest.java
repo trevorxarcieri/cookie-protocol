@@ -51,9 +51,7 @@ public class CookieRequestIntTest {
         cProtocol.setCookieServer(InetAddress.getByName(serverName), cookieServerPort);
 
         // Run the test
-        cProtocol.requestCookie();
-        // commented out to allow debugging
-        // assertDoesNotThrow(() -> cProtocol.requestCookie());
+        assertDoesNotThrow(() -> cProtocol.requestCookie());
 
         // verify a specified behavior
         int value = assertDoesNotThrow(() -> {
