@@ -10,8 +10,15 @@ class CPCommandMsg extends CPMsg {
     protected int id;
     private int cookie;
 
-    protected CPCommandMsg(int id, int cookie) {
+    protected CPCommandMsg() {
         super();
+    }
+
+    protected CPCommandMsg(int id, int cookie) throws IllegalMsgException {
+        super();
+        if (id > 65535 || id < 0) {
+            throw new IllegalMsgException();
+        }
         this.id = id;
         this.cookie = cookie;
     }
