@@ -3,8 +3,6 @@ package cp;
 import core.Msg;
 import exceptions.IllegalMsgException;
 
-import java.util.zip.CRC32;
-
 class CPCommandMsg extends CPMsg {
     protected static final String CP_CMD_HEADER = "command";
     protected int id;
@@ -31,9 +29,7 @@ class CPCommandMsg extends CPMsg {
     protected void create(String data) {
         // prepend command header
         data = CP_CMD_HEADER + " " + this.id + " " + this.cookie + " " + data.length() + " " + data;
-        CRC32 crc32 = new CRC32();
-        crc32.update(data.getBytes()); // calculate checksum
-        data += " " + crc32.getValue(); // append checksum
+        data += " " + super.getCrc(data); // append checksum
         // super class prepends cp header
         super.create(data);
     }

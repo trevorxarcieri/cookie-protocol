@@ -5,8 +5,6 @@ import exceptions.BadChecksumException;
 import exceptions.IWProtocolException;
 import exceptions.IllegalMsgException;
 
-import java.util.zip.CRC32;
-
 class CPCommandResponseMsg extends CPMsg {
     protected static final String CP_CMD_RESP_HEADER = "command_response";
     protected int id;
@@ -39,9 +37,7 @@ class CPCommandResponseMsg extends CPMsg {
         // prepend command response header
         data = CP_CMD_RESP_HEADER + " " + this.id + " " + (this.success ? "ok" : "error") + " " + data.length()
                 + (data.isEmpty() ? "" : " " + data);
-        CRC32 crc32 = new CRC32();
-        crc32.update(data.getBytes()); // calculate checksum
-        data += " " + crc32.getValue(); // append checksum
+        data += " " + super.getCrc(data); // append checksum
         // super class prepends cp header
         super.create(data);
     }
@@ -79,12 +75,11 @@ class CPCommandResponseMsg extends CPMsg {
             throw new IllegalMsgException();
         }
 
-        CRC32 crc32 = new CRC32();
         String[] protectedData = !msgField.isEmpty() ? new String[] { parts[0], parts[1], parts[2], parts[3], msgField }
                 : new String[] { parts[0], parts[1], parts[2], parts[3] };
-        crc32.update(String.join(" ", protectedData).getBytes()); // calculate checksum
+        long crc = super.getCrc(String.join(" ", protectedData)); // calculate checksum
         try {
-            if (crc32.getValue() != Long.parseLong(crcField)) {
+            if (crc != Long.parseLong(crcField)) {
                 throw new BadChecksumException();
             }
         } catch (NumberFormatException e) {

@@ -3,9 +3,16 @@ package cp;
 import core.Msg;
 import exceptions.IWProtocolException;
 import exceptions.IllegalMsgException;
+import java.util.zip.CRC32;
 
 class CPMsg extends Msg {
     protected static final String CP_HEADER = "cp";
+
+    protected static long getCrc(String data) {
+        CRC32 crc32 = new CRC32();
+        crc32.update(data.getBytes());
+        return crc32.getValue();
+    }
 
     @Override
     protected void create(String sentence) {
