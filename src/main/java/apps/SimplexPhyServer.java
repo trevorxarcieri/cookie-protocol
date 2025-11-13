@@ -11,11 +11,11 @@ import exceptions.IWProtocolException;
  */
 public class SimplexPhyServer {
 	protected static final int SERVERPORT = 4999;
-	
+
 	public static void main(String[] args) throws IWProtocolException {
 		// create phy protocol instance
 		PhyProtocol phy = new PhyProtocol(SERVERPORT);
-		
+
 		boolean eof = false;
 		while (!eof) {
 			try {

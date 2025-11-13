@@ -10,7 +10,7 @@ import exceptions.*;
 
 public class PhyProtocol extends Protocol {
 	protected DatagramSocket socket;
-	
+
 	/*
 	 * Create a new PhyProtocol instance connected to UDP port provided
 	 */
@@ -29,12 +29,12 @@ public class PhyProtocol extends Protocol {
 	public void send(String s, Configuration config) throws IOException, IWProtocolException {
 		// Create empty PhyMsg object
 		PhyMsg m = new PhyMsg((PhyConfiguration) config);
-		//Populate PhyMsg object with data
+		// Populate PhyMsg object with data
 		m.create(s);
 		// Call actual send method
 		this.send(m);
 	}
-	
+
 	public void send(PhyMsg m) throws IOException {
 		// Create UDP packet
 		DatagramPacket sendPacket = new DatagramPacket(m.getDataBytes(), m.getLength(),
@@ -43,9 +43,10 @@ public class PhyProtocol extends Protocol {
 		// send UDP packet
 		socket.send(sendPacket);
 	}
-	
+
 	/*
-	 * receive incoming message from socket and parse -> call blocks on socket until message is received
+	 * receive incoming message from socket and parse -> call blocks on socket until
+	 * message is received
 	 * return Msg object to caller
 	 */
 	@Override
@@ -67,15 +68,17 @@ public class PhyProtocol extends Protocol {
 			e.printStackTrace();
 		}
 		// create a config object from packet meta-data
-		PhyConfiguration config = new PhyConfiguration(receivePacket.getAddress(), receivePacket.getPort(), in.getPid());
+		PhyConfiguration config = new PhyConfiguration(receivePacket.getAddress(), receivePacket.getPort(),
+				in.getPid());
 		in.setConfiguration(config);
 
-		// if message was parsed correctly object is returned to caller  
+		// if message was parsed correctly object is returned to caller
 		return in;
 	}
-	
+
 	/*
-	 * wrapper method to basic receive method -> call blocks on socket until message is received or 
+	 * wrapper method to basic receive method -> call blocks on socket until message
+	 * is received or
 	 * timeout expires and exception is raised
 	 */
 	public Msg receive(int timeout) throws IOException {
@@ -86,17 +89,17 @@ public class PhyProtocol extends Protocol {
 		socket.setSoTimeout(0);
 		return in;
 	}
-	
+
 	// Send three ping messages to another system
 	public void ping(Configuration config) throws IOException, IWProtocolException {
-		for(int i=0; i<3;i++) {
+		for (int i = 0; i < 3; i++) {
 			// Create empty PhyPingMsg object
 			PhyPingMsg m = new PhyPingMsg((PhyConfiguration) config);
-			//Populate PhyPingMsg object with data
+			// Populate PhyPingMsg object with data
 			m.create(Integer.toString(i));
 			// Call actual send method
 			this.send(m);
 		}
 	}
-	
+
 }

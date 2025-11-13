@@ -25,7 +25,8 @@ public class PhyPingClient {
 		try {
 			// create a new phy configuration object
 			// getByName might throw exception
-			config = new PhyConfiguration(InetAddress.getByName(SERVERNAME), PhyPingServer.SERVERPORT, Protocol.proto_id.APP);
+			config = new PhyConfiguration(InetAddress.getByName(SERVERNAME), PhyPingServer.SERVERPORT,
+					Protocol.proto_id.APP);
 		} catch (UnknownHostException e1) {
 			e1.printStackTrace();
 			return;

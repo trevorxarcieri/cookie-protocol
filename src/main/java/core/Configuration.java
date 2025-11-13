@@ -6,7 +6,7 @@ package core;
  */
 public class Configuration {
 	protected Protocol nextLowerProtocol;
-	
+
 	public Configuration(Protocol proto) {
 		this.nextLowerProtocol = proto;
 	}

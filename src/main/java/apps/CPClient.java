@@ -12,7 +12,6 @@ import java.net.InetAddress;
 public class CPClient {
     private static final String SERVER_NAME = "localhost";
 
-
     public static void main(String[] args) {
         // Each client needs to start on a unique UDP port provided by the user
         if (args.length != 1) {
@@ -46,7 +45,7 @@ public class CPClient {
                 System.out.println("Command: ");
                 sentence = inFromUser.readLine();
                 // Currently only these two commands are supported by the specification
-                if(!(sentence.equals("status") || sentence.startsWith("print"))) {
+                if (!(sentence.equals("status") || sentence.startsWith("print"))) {
                     System.out.println("Only these two commands are supported: status, print \"text\"");
                     continue;
                 }

@@ -16,23 +16,23 @@ public class MonolithicEchoPhyClient {
 			// Read String from keyboard
 			System.out.print("Your message for the server: ");
 			String sentence = inFromUser.readLine();
-			
+
 			// Add protocol header
 			sentence = "phy 3 " + sentence;
-			
+
 			// Send packet
 			byte[] buffer = sentence.getBytes();
 			DatagramPacket packet = new DatagramPacket(
-			        buffer, buffer.length, InetAddress.getByName("localhost"), 12000);
+					buffer, buffer.length, InetAddress.getByName("localhost"), 12000);
 			datagramSocket.send(packet);
-			
+
 			// Receive a packet
 			byte[] receiveData = new byte[2048];
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 			datagramSocket.receive(receivePacket);
 			String message = new String(receivePacket.getData());
-			
-			// Strip protocol header 
+
+			// Strip protocol header
 			message = message.substring("phy 3 ".length()).trim();
 			System.out.println("Received message: " + message);
 
@@ -41,5 +41,5 @@ public class MonolithicEchoPhyClient {
 			e.printStackTrace();
 		}
 	}
-	
+
 }

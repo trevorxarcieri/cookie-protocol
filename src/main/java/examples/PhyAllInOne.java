@@ -14,7 +14,7 @@ import phy.PhyConfiguration;
 public class PhyAllInOne implements Runnable {
 	private static final String SERVERNAME = "localhost";
 	PhyProtocol phy;
-	
+
 	public PhyAllInOne(PhyProtocol p) {
 		this.phy = p;
 	}
@@ -25,10 +25,10 @@ public class PhyAllInOne implements Runnable {
 			return;
 		}
 		int phyPortNumber = Integer.parseInt(args[0]);
-		
+
 		// Set up the virtual link protocol
 		PhyProtocol phy = new PhyProtocol(phyPortNumber);
-		
+
 		// Start the receiver side of the app
 		PhyAllInOne recv = new PhyAllInOne(phy);
 		Thread recvT = new Thread(recv);
@@ -46,7 +46,7 @@ public class PhyAllInOne implements Runnable {
 			return;
 		}
 		int dst = Integer.parseInt(sentence);
-		
+
 		boolean eof = false;
 		while (!eof) {
 			try {
@@ -55,7 +55,8 @@ public class PhyAllInOne implements Runnable {
 				sentence = inFromUser.readLine();
 				if (sentence.equalsIgnoreCase("eof"))
 					eof = true;
-				PhyConfiguration config = new PhyConfiguration(InetAddress.getByName(SERVERNAME), dst, Protocol.proto_id.APP);
+				PhyConfiguration config = new PhyConfiguration(InetAddress.getByName(SERVERNAME), dst,
+						Protocol.proto_id.APP);
 				phy.send(sentence.trim(), config);
 			} catch (IWProtocolException | IOException | NullPointerException e) {
 				e.printStackTrace();
@@ -63,12 +64,12 @@ public class PhyAllInOne implements Runnable {
 		}
 
 	}
-	
+
 	// Receiver thread
 	@Override
 	public void run() {
 		boolean eof = false;
-		
+
 		while (!eof) {
 			try {
 				Msg msg = this.phy.receive();
@@ -81,7 +82,7 @@ public class PhyAllInOne implements Runnable {
 				e.printStackTrace();
 			}
 		}
-	
+
 	}
 
 }

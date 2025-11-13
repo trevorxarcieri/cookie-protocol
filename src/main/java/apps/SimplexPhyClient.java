@@ -17,7 +17,7 @@ import exceptions.IWProtocolException;
 public class SimplexPhyClient {
 	private static final String SERVERNAME = "localhost";
 	public static final int CLIENTPORT = 6789;
-	
+
 	public static void main(String[] args) {
 		// Create a new phy protocol instance with defined UDP port
 		PhyProtocol proto = new PhyProtocol(CLIENTPORT);
@@ -26,12 +26,13 @@ public class SimplexPhyClient {
 		try {
 			// create a new phy configuration object
 			// getByName might throw exception
-			config = new PhyConfiguration(InetAddress.getByName(SERVERNAME), SimplexPhyServer.SERVERPORT, Protocol.proto_id.APP);
+			config = new PhyConfiguration(InetAddress.getByName(SERVERNAME), SimplexPhyServer.SERVERPORT,
+					Protocol.proto_id.APP);
 		} catch (UnknownHostException e1) {
 			e1.printStackTrace();
 			return;
 		}
-		
+
 		BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
 		boolean eof = false;
 		while (!eof) {

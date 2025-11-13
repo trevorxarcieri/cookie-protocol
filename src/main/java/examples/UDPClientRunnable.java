@@ -7,16 +7,15 @@ import java.net.SocketException;
 
 public class UDPClientRunnable implements Runnable {
 	private final DatagramSocket clientSocket;
-	
-	public UDPClientRunnable() throws SocketException {		
+
+	public UDPClientRunnable() throws SocketException {
 		this.clientSocket = new DatagramSocket();
 	}
-	
+
 	@Override
 	public void run() {
 		// Read from keyboard
-		java.io.BufferedReader inFromUser =
-				new java.io.BufferedReader(new java.io.InputStreamReader(System.in));
+		java.io.BufferedReader inFromUser = new java.io.BufferedReader(new java.io.InputStreamReader(System.in));
 		String portString;
 		String sentence;
 		int port;
@@ -39,7 +38,7 @@ public class UDPClientRunnable implements Runnable {
 				clientSocket.send(sendPacket);
 			} catch (Exception e) {
 				e.printStackTrace();
-			} 
+			}
 		}
 	}
 

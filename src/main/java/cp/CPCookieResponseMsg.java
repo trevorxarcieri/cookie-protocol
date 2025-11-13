@@ -11,13 +11,18 @@ class CPCookieResponseMsg extends CPMsg {
     protected CPCookieResponseMsg() {
 
     }
+
     protected CPCookieResponseMsg(boolean s) {
         this.success = s;
     }
 
-    protected boolean getSuccess() {return this.success;}
+    protected boolean getSuccess() {
+        return this.success;
+    }
 
-    protected int getCookie() {return this.cookie;}
+    protected int getCookie() {
+        return this.cookie;
+    }
 
     /*
      * Create cookie request message.
@@ -40,7 +45,7 @@ class CPCookieResponseMsg extends CPMsg {
             throw new IllegalMsgException();
         }
         String[] parts = sentence.split("\\s+", 3);
-        if(parts.length != 3)
+        if (parts.length != 3)
             throw new IllegalMsgException();
 
         this.success = parts[1].equals("ACK");

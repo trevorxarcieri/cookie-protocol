@@ -11,5 +11,4 @@ import java.net.InetAddress;
 public class CPCommandServer {
     protected static final int COMMAND_SERVER_PORT = 2000;
 
-
 }

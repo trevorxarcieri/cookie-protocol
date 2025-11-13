@@ -10,7 +10,7 @@ public class PhyPingMsg extends PhyMsg {
 	protected PhyPingMsg(PhyConfiguration config) {
 		super(config);
 	}
-	
+
 	public int getCount() {
 		return count;
 	}
@@ -24,12 +24,12 @@ public class PhyPingMsg extends PhyMsg {
 		String sentence = PHY_PING_HEADER + data;
 		super.create(sentence);
 	}
-	
+
 	/*
 	 * Does the message start with the correct header
-	 *  -> if not illegal message
+	 * -> if not illegal message
 	 * Remove header and populate data attribute
-	 *  -> try converting data to type Integer
+	 * -> try converting data to type Integer
 	 */
 	@Override
 	protected Msg parse(String sentence) throws IllegalMsgException {
@@ -44,7 +44,7 @@ public class PhyPingMsg extends PhyMsg {
 		} catch (NumberFormatException e) {
 			throw new IllegalMsgException();
 		}
-		
+
 		return this;
 	}
 
