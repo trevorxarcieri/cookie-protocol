@@ -19,7 +19,6 @@ import java.net.UnknownHostException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(MockitoExtension.class)
 public class CPClientCookieRequestTest extends BaseNetworkTest {
     PhyProtocol phyProtocol;
     CPProtocol cProtocol;
