@@ -5,7 +5,7 @@ import exceptions.BadChecksumException;
 import exceptions.IWProtocolException;
 import exceptions.IllegalMsgException;
 
-class CPCommandResponseMsg extends CPMsg {
+public class CPCommandResponseMsg extends CPMsg {
     protected static final String CP_CMD_RESP_HEADER = "command_response";
     protected int id;
     protected boolean success;
@@ -20,11 +20,11 @@ class CPCommandResponseMsg extends CPMsg {
         this.success = success;
     }
 
-    protected int getId() {
+    public int getId() {
         return this.id;
     }
 
-    protected boolean getSuccess() {
+    public boolean getSuccess() {
         return this.success;
     }
 
