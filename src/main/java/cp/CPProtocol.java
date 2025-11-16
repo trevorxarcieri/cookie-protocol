@@ -101,15 +101,26 @@ public class CPProtocol extends Protocol {
                     }
                 }
                 if (i == 3) // if all 3 tries timed out
-                    throw new ReceiveCommandResponseException(); // unable to receive command
+                    throw new ReceiveCommandResponseException(); // unable to receive command response
                 throw new CookieTimeoutException(); // otherwise, we must've hit the break due to a timed-out cookie and
                                                     // thus a rejected command
+            case COOKIE:
+                while (true) { // block until cookie is received
+                    try {
+                        Msg in = this.PhyProto.receive();
+                        if (((PhyConfiguration) in.getConfiguration()).getPid() != proto_id.CP) // if not CP protocol
+                            continue;
+                        resMsg = ((CPMsg) resMsg).parse(in.getData());
+                        if (resMsg instanceof CPCookieRequestMsg) {
+                            return resMsg;
+                        }
+                    } catch (IWProtocolException ignored) {
+                    }
+                }
             default:
-                System.out.println("Send method not implemented for role " + this.role + ".");
+                System.out.println("Receive method not implemented for role " + this.role + ".");
                 break;
         }
-
-        // Task 2.1.1: enhance receive method
 
         return resMsg;
     }
