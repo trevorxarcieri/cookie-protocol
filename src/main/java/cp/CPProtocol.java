@@ -10,17 +10,20 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.Random;
 
 public class CPProtocol extends Protocol {
     private static final int CP_TIMEOUT = 2000;
     private static final int CP_HASHMAP_SIZE = 20;
+    private static final int COOKIE_LIFETIME_MS = 60000;
     private int cookie;
     private int id;
     private PhyConfiguration PhyConfigCommandServer;
     private PhyConfiguration PhyConfigCookieServer;
     private final PhyProtocol PhyProto;
     private final cp_role role;
+    private final int cookie_lifetime_ms;
     HashMap<PhyConfiguration, Cookie> cookieMap;
     ArrayList<CPCommandMsg> pendingCommands;
     Random rnd;
@@ -31,16 +34,18 @@ public class CPProtocol extends Protocol {
 
     // Constructor for clients
     public CPProtocol(InetAddress rname, int rp, PhyProtocol phyP) throws UnknownHostException {
+        this.cookie = -1;
+        this.id = 0;
         this.PhyConfigCommandServer = new PhyConfiguration(rname, rp, proto_id.CP);
         this.PhyProto = phyP;
         this.role = cp_role.CLIENT;
-        this.cookie = -1;
-        this.id = 0;
+        this.cookie_lifetime_ms = COOKIE_LIFETIME_MS; // TODO: remove?
     }
 
-    // Constructor for servers
+    // Constructors for servers
     public CPProtocol(PhyProtocol phyP, boolean isCookieServer) {
         this.PhyProto = phyP;
+        this.cookie_lifetime_ms = COOKIE_LIFETIME_MS;
         if (isCookieServer) {
             this.role = cp_role.COOKIE;
             this.cookieMap = new HashMap<>();
@@ -49,6 +54,18 @@ public class CPProtocol extends Protocol {
             this.role = cp_role.COMMAND;
             this.pendingCommands = new ArrayList<>();
         }
+    }
+
+    /**
+     * CPProtocol constructor for a cookie server which supports custom cookie
+     * lifetime duration.
+     */
+    public CPProtocol(PhyProtocol phyP, int cookie_lifetime_ms) {
+        this.PhyProto = phyP;
+        this.cookie_lifetime_ms = cookie_lifetime_ms;
+        this.role = cp_role.COOKIE;
+        this.cookieMap = new HashMap<>();
+        this.rnd = new Random();
     }
 
     public void setCookieServer(InetAddress rname, int rp) throws UnknownHostException {
@@ -70,9 +87,11 @@ public class CPProtocol extends Protocol {
                 this.PhyProto.send(msg.getData(), this.PhyConfigCommandServer);
                 this.id++; // guarantee next send will have higher id
                 break;
-            default:
-                System.out.println("Send method not implemented for role " + this.role + ".");
+            case COOKIE:
+                this.PhyProto.send(s, config);
                 break;
+            default:
+                throw new RuntimeException("Send String method not implemented for role " + this.role + ".");
         }
     }
 
@@ -112,17 +131,15 @@ public class CPProtocol extends Protocol {
                             continue;
                         resMsg = ((CPMsg) resMsg).parse(in.getData());
                         if (resMsg instanceof CPCookieRequestMsg) {
+                            cookie_process((CPMsg) resMsg);
                             return resMsg;
                         }
                     } catch (IWProtocolException ignored) {
                     }
                 }
             default:
-                System.out.println("Receive method not implemented for role " + this.role + ".");
-                break;
+                throw new RuntimeException("Receive method not implemented for role " + this.role + ".");
         }
-
-        return resMsg;
     }
 
     // CookieServer processing of incoming messages
@@ -133,9 +150,32 @@ public class CPProtocol extends Protocol {
         return stored;
     }
 
+    private void evict_expired_cookies() {
+        long curTime = System.currentTimeMillis();
+        for (Entry<PhyConfiguration, Cookie> e : this.cookieMap.entrySet()) {
+            if (curTime > e.getValue().getTimeOfCreation() + this.cookie_lifetime_ms) {
+                this.cookieMap.remove(e.getKey());
+            }
+        }
+    }
+
     // Processing of the CookieRequestMsg
     private void cookie_process(CPMsg cpmIn) throws IWProtocolException, IOException {
+        evict_expired_cookies(); // evict old cookies to make room for the upcoming new cookie if possible
 
+        PhyConfiguration conf = (PhyConfiguration) cpmIn.getConfiguration();
+
+        if (cookieMap.size() > CP_HASHMAP_SIZE) {
+            CPCookieResponseMsg resp = new CPCookieResponseMsg(false);
+            resp.create("Max number of clients (20) currently have a valid cookie. Please try again later.");
+            send(resp.getData(), conf);
+        }
+
+        Cookie ck = new Cookie(System.currentTimeMillis(), rnd.nextInt());
+
+        // TODO: use send method to send cookie response back
+
+        cookieMap.put(conf, ck);
     }
 
     // Method for the client to request a cookie
