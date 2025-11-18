@@ -9,7 +9,6 @@ class CPCookieResponseMsg extends CPMsg {
     private int cookie;
 
     protected CPCookieResponseMsg() {
-
     }
 
     protected CPCookieResponseMsg(boolean s) {
