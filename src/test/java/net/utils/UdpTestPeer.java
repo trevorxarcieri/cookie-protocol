@@ -11,6 +11,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Assertions;
@@ -26,8 +29,15 @@ public final class UdpTestPeer implements AutoCloseable {
     public static final class ReceiveStep implements ScriptStep {
         private final Pattern pattern;
 
+        private final Consumer<Matcher> matcherConsumer; // optional
+
         public ReceiveStep(Pattern pattern) {
+            this(pattern, null);
+        }
+
+        public ReceiveStep(Pattern pattern, Consumer<Matcher> matcherConsumer) {
             this.pattern = pattern;
+            this.matcherConsumer = matcherConsumer;
         }
 
         @Override
@@ -35,14 +45,18 @@ public final class UdpTestPeer implements AutoCloseable {
             DatagramPacket packet = new DatagramPacket(new byte[2048], 2048);
             socket.receive(packet);
 
-            String received = new String(packet.getData()).trim();
+            String received = new String(packet.getData(), 0, packet.getLength()).trim();
 
             if (this.pattern != null) {
-                boolean matches = this.pattern.matcher(received).matches();
-                if (!matches) {
+                Matcher m = this.pattern.matcher(received);
+                if (!m.matches()) {
                     Assertions.fail(
                             "UDP peer expected text matching regex " + this.pattern
                                     + " but received: \"" + received + "\"");
+                }
+
+                if (matcherConsumer != null) {
+                    matcherConsumer.accept(m);
                 }
             }
         }
@@ -71,6 +85,26 @@ public final class UdpTestPeer implements AutoCloseable {
     /** Convenience factories */
     public static ReceiveStep recv(String regex) {
         return new ReceiveStep(Pattern.compile(regex));
+    }
+
+    /** Capture an arbitrary group index into a single AtomicReference<String> */
+    public static ReceiveStep recvCapture(String regex, int groupIndex, AtomicReference<String> ref) {
+        Pattern pattern = Pattern.compile(regex);
+        return new ReceiveStep(pattern, m -> ref.set(m.group(groupIndex)));
+    }
+
+    /**
+     * Capture multiple groups into multiple AtomicReferences
+     * ref[0] -> group 1, ref[1] -> group 2, ...
+     */
+    @SafeVarargs
+    public static ReceiveStep recvCapture(String regex, AtomicReference<String>... refs) {
+        Pattern pattern = Pattern.compile(regex);
+        return new ReceiveStep(pattern, m -> {
+            for (int i = 0; i < refs.length; i++) {
+                refs[i].set(m.group(i + 1));
+            }
+        });
     }
 
     public static SendStep send(String payload, InetAddress addr, int port) {
