@@ -1,9 +1,5 @@
 package cp;
 
-import core.*;
-import exceptions.*;
-import phy.*;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
@@ -12,6 +8,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.Random;
+
+import core.Configuration;
+import core.Msg;
+import core.Protocol;
+import exceptions.CookieRequestException;
+import exceptions.CookieTimeoutException;
+import exceptions.IWProtocolException;
+import exceptions.ReceiveCommandResponseException;
+import phy.PhyConfiguration;
+import phy.PhyProtocol;
 
 public class CPProtocol extends Protocol {
     private static final int CP_TIMEOUT = 2000;
@@ -146,27 +152,42 @@ public class CPProtocol extends Protocol {
         }
     }
 
-    // Processing of the CookieRequestMsg
+    private void send_cookie_resp(Cookie ck, PhyConfiguration conf) throws IWProtocolException, IOException {
+        CPCookieResponseMsg resp = new CPCookieResponseMsg(true);
+        resp.create("" + ck.getCookieValue());
+        send(resp.getData(), conf);
+    }
+
+    /*
+     * Process a cookie request from a client.
+     * 
+     * Cookie renewal is idempotent: if the client requests a cookie while its
+     * current cookie is still valid, the cookie server just returns the existing
+     * cookie. This simplifies client retries (they can always request again on
+     * failure), avoids unnecessary growth in issued cookies, and aligns with
+     * typical web API design where repeated requests do not create unnecessary new
+     * state.
+     */
     private void cookie_process(CPMsg cpmIn) throws IWProtocolException, IOException {
         evict_expired_cookies(); // evict old cookies to make room for the upcoming new cookie if possible
 
         PhyConfiguration conf = (PhyConfiguration) cpmIn.getConfiguration();
 
-        if (cookieMap.size() >= CP_HASHMAP_SIZE) {
+        if (cookieMap.containsKey(conf)) { // if client already has a valid cookie, resend it
+            Cookie ck = cookieMap.get(conf);
+            send_cookie_resp(ck, conf);
+            return;
+        }
+
+        if (cookieMap.size() >= CP_HASHMAP_SIZE) { // if hashmap is full, deny cookie request
             CPCookieResponseMsg resp = new CPCookieResponseMsg(false);
             resp.create("Max number of clients (20) currently have a valid cookie. Please try again later.");
             send(resp.getData(), conf);
         }
 
         Cookie ck = new Cookie(System.currentTimeMillis(), rnd.nextInt()); // create cookie
-
-        // send cookie response
-        CPCookieResponseMsg resp = new CPCookieResponseMsg(true);
-        resp.create("" + ck.getCookieValue());
-        send(resp.getData(), conf);
-
-        // add cookie to hash map
-        cookieMap.put(conf, ck);
+        send_cookie_resp(ck, conf); // send cookie response
+        cookieMap.put(conf, ck); // add cookie to hash map
     }
 
     // Method for the client to request a cookie
