@@ -244,4 +244,17 @@ class Cookie {
     public int getCookieValue() {
         return cookieValue;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Cookie c = (Cookie) o;
+        return ((this.timeOfCreation == c.getTimeOfCreation()) && (this.cookieValue == c.getCookieValue()));
+    }
 }
