@@ -195,21 +195,23 @@ public class CPProtocol extends Protocol {
                 if (((PhyConfiguration) in.getConfiguration()).getPid() != proto_id.CP)
                     continue;
                 resMsg = ((CPMsg) resMsg).parse(in.getData());
-                if (resMsg instanceof CPCookieResponseMsg)
-                    break;
+                if (resMsg instanceof CPCookieResponseMsg) {
+                    CPCookieResponseMsg ckRespMsg = (CPCookieResponseMsg) resMsg;
+
+                    if (!ckRespMsg.getSuccess()) {
+                        break; // cookie request was denied, break
+                    }
+
+                    this.cookie = ckRespMsg.getCookie(); // set cookie
+                    return;
+                }
             } catch (SocketTimeoutException e) {
                 count += 1;
             } catch (IWProtocolException ignored) {
             }
         }
 
-        if (count == 3)
-            throw new CookieRequestException();
-        if (resMsg instanceof CPCookieResponseMsg && !((CPCookieResponseMsg) resMsg).getSuccess()) {
-            throw new CookieRequestException();
-        }
-        assert resMsg instanceof CPCookieResponseMsg;
-        this.cookie = ((CPCookieResponseMsg) resMsg).getCookie();
+        throw new CookieRequestException(); // all 3 tries timed out or a req was denied, throw
     }
 }
 
