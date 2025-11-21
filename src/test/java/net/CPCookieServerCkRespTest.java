@@ -31,7 +31,7 @@ public class CPCookieServerCkRespTest extends BaseNetworkTest {
     }
 
     @Test
-    void testCkRespSucc() throws IWProtocolException, IOException {
+    void testCookieRespHappyPath() throws IWProtocolException, IOException {
         AtomicReference<String> cookieRef = new AtomicReference<>();
         long minTocMs = System.currentTimeMillis();
         try (UdpTestPeer peer = UdpTestPeer.start(
@@ -39,6 +39,7 @@ public class CPCookieServerCkRespTest extends BaseNetworkTest {
                 UdpTestPeer.recvCapture("phy 7 cp cookie_response ACK (-?\\d+)", cookieRef))) {
             assertDoesNotThrow(() -> cProtocol.receive());
             peer.await(2000);
+
             HashMap<PhyConfiguration, Cookie> cookieMap = getCookieMap(this.cProtocol);
             assertEquals(cookieMap.size(), 1);
 
@@ -62,57 +63,68 @@ public class CPCookieServerCkRespTest extends BaseNetworkTest {
                 UdpTestPeer.recv("phy 7 cp cookie_response ACK -?\\d+"))) {
             assertDoesNotThrow(() -> cProtocol.receive());
             peer.await(2000);
+
             assertEquals(getCookieMap(this.cProtocol).size(), 1);
         }
     }
 
-    // @Test
-    // void testNoCookie() throws IOException, IWProtocolException {
-    // try (UdpTestPeer peer = UdpTestPeer.start(
-    // this.cookieServerPort, UdpTestPeer.recv("phy 7 cp cookie_request"),
-    // UdpTestPeer.send("phy 7 cp cookie_response NAK no resources", this.addr,
-    // this.clientPort))) {
-    // assertThrows(CookieRequestException.class, () -> cProtocol.requestCookie());
-    // peer.await(2000);
-    // assertEquals(getCookie(), -1);
-    // }
-    // }
+    @Test
+    void testCookieRespIdempotent() throws IOException, IWProtocolException {
+        AtomicReference<String> cookie1Ref = new AtomicReference<>();
+        AtomicReference<String> cookie2Ref = new AtomicReference<>();
+        try (UdpTestPeer peer = UdpTestPeer.start(
+                this.clientPort,
+                UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
+                UdpTestPeer.recvCapture("phy 7 cp cookie_response ACK (-?\\d+)", cookie1Ref),
+                UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
+                UdpTestPeer.recvCapture("phy 7 cp cookie_response ACK (-?\\d+)", cookie2Ref))) {
+            assertDoesNotThrow(() -> cProtocol.receive());
+            assertDoesNotThrow(() -> cProtocol.receive());
+            peer.await(2000);
 
-    // @Test
-    // void testMalformedCPMsg() throws IOException, IWProtocolException {
-    // try (UdpTestPeer peer = UdpTestPeer.start(
-    // this.cookieServerPort, UdpTestPeer.recv("phy 7 cp cookie_request"),
-    // UdpTestPeer.send("phy 7 cp cookie_response ACK abc", this.addr,
-    // this.clientPort),
-    // UdpTestPeer.send("phy 7 cp cookie_response ACK 12345", this.addr,
-    // this.clientPort))) {
-    // assertDoesNotThrow(() -> cProtocol.requestCookie());
-    // peer.await(2000);
-    // assertEquals(getCookie(), 12345);
-    // }
-    // }
+            assertEquals(getCookieMap(this.cProtocol).size(), 1); // only 1 cookie exists in the cookie server
+            assertEquals(cookie1Ref.get(), cookie2Ref.get()); // server returns the same cookie for both requests
+        }
+    }
 
-    // @Test
-    // void testIncompleteCPMsg() throws IOException, IWProtocolException {
-    // try (UdpTestPeer peer = UdpTestPeer.start(
-    // this.cookieServerPort, UdpTestPeer.recv("phy 7 cp cookie_request"),
-    // UdpTestPeer.send("phy 7 cp cookie_response ACK", this.addr, this.clientPort),
-    // UdpTestPeer.send("phy 7 cp cookie_response ACK 12345", this.addr,
-    // this.clientPort))) {
-    // assertDoesNotThrow(() -> cProtocol.requestCookie());
-    // peer.await(2000);
-    // assertEquals(getCookie(), 12345);
-    // }
-    // }
+    @Test
+    void testCookieResp2Clients() throws IOException, IWProtocolException {
+        AtomicReference<String> cookie1Ref = new AtomicReference<>();
+        AtomicReference<String> cookie2Ref = new AtomicReference<>();
+        int client2Port = findFreePort();
+        try (UdpTestPeer peer1 = UdpTestPeer.start(
+                this.clientPort,
+                UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
+                UdpTestPeer.recvCapture("phy 7 cp cookie_response ACK (-?\\d+)", cookie1Ref))) {
+            assertDoesNotThrow(() -> cProtocol.receive());
+            peer1.await(2000);
+            try (UdpTestPeer peer2 = UdpTestPeer.start(
+                    client2Port,
+                    UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
+                    UdpTestPeer.recvCapture("phy 7 cp cookie_response ACK (-?\\d+)", cookie2Ref))) {
+                assertDoesNotThrow(() -> cProtocol.receive());
+                peer2.await(2000);
 
-    // @Test
-    // void testMessageLoss() throws IOException, IWProtocolException {
-    // try (UdpTestPeer peer = UdpTestPeer.start(
-    // this.cookieServerPort, UdpTestPeer.recv("phy 7 cp cookie_request"))) {
-    // assertThrows(CookieRequestException.class, () -> cProtocol.requestCookie());
-    // peer.await(2000);
-    // assertEquals(getCookie(), -1);
-    // }
-    // }
+                HashMap<PhyConfiguration, Cookie> cookieMap = getCookieMap(this.cProtocol);
+                assertEquals(cookieMap.size(), 2);
+
+                PhyConfiguration client1Conf = new PhyConfiguration(this.addr, this.clientPort, proto_id.CP);
+                PhyConfiguration client2Conf = new PhyConfiguration(this.addr, client2Port, proto_id.CP);
+                assertTrue(cookieMap.containsKey(client1Conf));
+                assertTrue(cookieMap.containsKey(client2Conf));
+
+                Cookie ck1 = cookieMap.get(client1Conf);
+                Cookie ck2 = cookieMap.get(client2Conf);
+                assertEquals(cookie1Ref.get(), "" + ck1.getCookieValue());
+                assertEquals(cookie2Ref.get(), "" + ck2.getCookieValue());
+                assertTrue(ck1.getTimeOfCreation() < ck2.getTimeOfCreation());
+            }
+        }
+    }
+
+    // TODO: make tests
+    // * 1 client timeout: configure short ttl, req cookie twice w/ short sleep
+    // in between, check that 1 cookie in hash map and diff cookie values received
+    // * 2 clients w/ max clients=1: check that second client gets a NACK back
 
 }
