@@ -116,7 +116,7 @@ public class CPProtocol extends Protocol {
                     throw new ReceiveCommandResponseException(); // unable to receive command response
 
                 // Otherwise, we must've hit the break due to a rejected command which means the
-                // cookie most likely timed out
+                // cookie most likely timed out.
                 this.cookie = -1; // invalidate cookie
                 throw new CookieTimeoutException();
             case COOKIE:
