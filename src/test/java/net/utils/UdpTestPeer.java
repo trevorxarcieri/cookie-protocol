@@ -109,7 +109,7 @@ public final class UdpTestPeer implements AutoCloseable {
         } catch (IOException e) {
             throw new RuntimeException("UdpTestPeer IO error", e);
         } finally {
-            this.socket.close();
+            close();
         }
     }
 
