@@ -23,7 +23,7 @@ class CPMsg extends Msg {
     @Override
     protected Msg parse(String sentence) throws IWProtocolException {
         CPMsg parsedMsg;
-        if (!sentence.startsWith(CP_HEADER))
+        if (!sentence.startsWith(CP_HEADER + " "))
             throw new IllegalMsgException();
 
         String[] parts = sentence.split("\\s+", 2);
