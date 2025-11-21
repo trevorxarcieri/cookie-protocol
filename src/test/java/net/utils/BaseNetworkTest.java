@@ -7,10 +7,13 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.HashMap;
 
 import org.junit.jupiter.api.BeforeEach;
 
 import cp.CPProtocol;
+import cp.Cookie;
+import phy.PhyConfiguration;
 
 public class BaseNetworkTest {
     private static final String SERVER_NAME = "localhost";
@@ -39,6 +42,15 @@ public class BaseNetworkTest {
                     MethodHandles.lookup());
             VarHandle vh = l.findVarHandle(CPProtocol.class, "cookie", int.class);
             return (int) vh.get(cProtocol);
+        });
+    }
+
+    protected static HashMap<PhyConfiguration, Cookie> getCookieMap(CPProtocol cProtocol) {
+        return assertDoesNotThrow(() -> {
+            MethodHandles.Lookup l = MethodHandles.privateLookupIn(CPProtocol.class,
+                    MethodHandles.lookup());
+            VarHandle vh = l.findVarHandle(CPProtocol.class, "cookieMap", HashMap.class);
+            return (HashMap<PhyConfiguration, Cookie>) vh.get(cProtocol);
         });
     }
 }
