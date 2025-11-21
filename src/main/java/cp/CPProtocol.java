@@ -25,6 +25,7 @@ public class CPProtocol extends Protocol {
     private static final int COOKIE_LIFETIME_MS = 60000;
     private int cookie;
     private int id;
+    private int max_num_clients;
     private int cookie_lifetime_ms;
     private PhyConfiguration PhyConfigCommandServer;
     private PhyConfiguration PhyConfigCookieServer;
@@ -48,12 +49,13 @@ public class CPProtocol extends Protocol {
     }
 
     // Constructors for servers
-    public CPProtocol(PhyProtocol phyP, boolean isCookieServer, Integer cookie_lifetime_ms) {
+    public CPProtocol(PhyProtocol phyP, boolean isCookieServer, Integer max_num_clients, Integer cookie_lifetime_ms) {
         this.PhyProto = phyP;
         if (isCookieServer) {
             this.role = cp_role.COOKIE;
             this.cookieMap = new HashMap<>();
             this.rnd = new Random();
+            this.max_num_clients = max_num_clients == null ? CP_HASHMAP_SIZE : max_num_clients;
             this.cookie_lifetime_ms = cookie_lifetime_ms == null ? COOKIE_LIFETIME_MS : cookie_lifetime_ms;
         } else {
             this.role = cp_role.COMMAND;
