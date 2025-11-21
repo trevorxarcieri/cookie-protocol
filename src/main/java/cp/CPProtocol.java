@@ -19,11 +19,11 @@ public class CPProtocol extends Protocol {
     private static final int COOKIE_LIFETIME_MS = 60000;
     private int cookie;
     private int id;
+    private int cookie_lifetime_ms;
     private PhyConfiguration PhyConfigCommandServer;
     private PhyConfiguration PhyConfigCookieServer;
     private final PhyProtocol PhyProto;
     private final cp_role role;
-    private final int cookie_lifetime_ms;
     HashMap<PhyConfiguration, Cookie> cookieMap;
     ArrayList<CPCommandMsg> pendingCommands;
     Random rnd;
@@ -39,13 +39,11 @@ public class CPProtocol extends Protocol {
         this.PhyConfigCommandServer = new PhyConfiguration(rname, rp, proto_id.CP);
         this.PhyProto = phyP;
         this.role = cp_role.CLIENT;
-        this.cookie_lifetime_ms = COOKIE_LIFETIME_MS; // TODO: remove?
     }
 
     // Constructors for servers
     public CPProtocol(PhyProtocol phyP, boolean isCookieServer) {
         this.PhyProto = phyP;
-        this.cookie_lifetime_ms = COOKIE_LIFETIME_MS;
         if (isCookieServer) {
             this.role = cp_role.COOKIE;
             this.cookieMap = new HashMap<>();
@@ -165,16 +163,20 @@ public class CPProtocol extends Protocol {
 
         PhyConfiguration conf = (PhyConfiguration) cpmIn.getConfiguration();
 
-        if (cookieMap.size() > CP_HASHMAP_SIZE) {
+        if (cookieMap.size() >= CP_HASHMAP_SIZE) {
             CPCookieResponseMsg resp = new CPCookieResponseMsg(false);
             resp.create("Max number of clients (20) currently have a valid cookie. Please try again later.");
             send(resp.getData(), conf);
         }
 
-        Cookie ck = new Cookie(System.currentTimeMillis(), rnd.nextInt());
+        Cookie ck = new Cookie(System.currentTimeMillis(), rnd.nextInt()); // create cookie
 
-        // TODO: use send method to send cookie response back
+        // send cookie response
+        CPCookieResponseMsg resp = new CPCookieResponseMsg(true);
+        resp.create("" + ck.getCookieValue());
+        send(resp.getData(), conf);
 
+        // add cookie to hash map
         cookieMap.put(conf, ck);
     }
 
