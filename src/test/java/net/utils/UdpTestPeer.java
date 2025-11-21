@@ -88,7 +88,7 @@ public final class UdpTestPeer implements AutoCloseable {
     }
 
     /** Capture an arbitrary group index into a single AtomicReference<String> */
-    public static ReceiveStep recvCapture(String regex, int groupIndex, AtomicReference<String> ref) {
+    public static ReceiveStep recv(String regex, int groupIndex, AtomicReference<String> ref) {
         Pattern pattern = Pattern.compile(regex);
         return new ReceiveStep(pattern, m -> ref.set(m.group(groupIndex)));
     }
@@ -98,7 +98,7 @@ public final class UdpTestPeer implements AutoCloseable {
      * ref[0] -> group 1, ref[1] -> group 2, ...
      */
     @SafeVarargs
-    public static ReceiveStep recvCapture(String regex, AtomicReference<String>... refs) {
+    public static ReceiveStep recv(String regex, AtomicReference<String>... refs) {
         Pattern pattern = Pattern.compile(regex);
         return new ReceiveStep(pattern, m -> {
             for (int i = 0; i < refs.length; i++) {

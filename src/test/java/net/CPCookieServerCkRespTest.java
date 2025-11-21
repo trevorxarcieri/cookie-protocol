@@ -36,7 +36,7 @@ public class CPCookieServerCkRespTest extends BaseNetworkTest {
         long minTocMs = System.currentTimeMillis();
         try (UdpTestPeer peer = UdpTestPeer.start(
                 this.clientPort, UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
-                UdpTestPeer.recvCapture("phy 7 cp cookie_response ACK (-?\\d+)", cookieRef))) {
+                UdpTestPeer.recv("phy 7 cp cookie_response ACK (-?\\d+)", cookieRef))) {
             assertDoesNotThrow(() -> cProtocol.receive());
             peer.await(2000);
 
@@ -53,31 +53,15 @@ public class CPCookieServerCkRespTest extends BaseNetworkTest {
     }
 
     @Test
-    void testIllegalMsgs() throws IOException, IWProtocolException {
-        try (UdpTestPeer peer = UdpTestPeer.start(
-                this.clientPort,
-                UdpTestPeer.send("phy 5 cp cookie_request", this.addr, this.cookieServerPort),
-                UdpTestPeer.send("phy 7 cpp cookie_request", this.addr, this.cookieServerPort),
-                UdpTestPeer.send("phy 7 cp cookie_requestt", this.addr, this.cookieServerPort),
-                UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
-                UdpTestPeer.recv("phy 7 cp cookie_response ACK -?\\d+"))) {
-            assertDoesNotThrow(() -> cProtocol.receive());
-            peer.await(2000);
-
-            assertEquals(getCookieMap(this.cProtocol).size(), 1);
-        }
-    }
-
-    @Test
     void testCookieRespIdempotent() throws IOException, IWProtocolException {
         AtomicReference<String> cookie1Ref = new AtomicReference<>();
         AtomicReference<String> cookie2Ref = new AtomicReference<>();
         try (UdpTestPeer peer = UdpTestPeer.start(
                 this.clientPort,
                 UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
-                UdpTestPeer.recvCapture("phy 7 cp cookie_response ACK (-?\\d+)", cookie1Ref),
+                UdpTestPeer.recv("phy 7 cp cookie_response ACK (-?\\d+)", cookie1Ref),
                 UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
-                UdpTestPeer.recvCapture("phy 7 cp cookie_response ACK (-?\\d+)", cookie2Ref))) {
+                UdpTestPeer.recv("phy 7 cp cookie_response ACK (-?\\d+)", cookie2Ref))) {
             assertDoesNotThrow(() -> cProtocol.receive());
             assertDoesNotThrow(() -> cProtocol.receive());
             peer.await(2000);
@@ -95,13 +79,13 @@ public class CPCookieServerCkRespTest extends BaseNetworkTest {
         try (UdpTestPeer peer1 = UdpTestPeer.start(
                 this.clientPort,
                 UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
-                UdpTestPeer.recvCapture("phy 7 cp cookie_response ACK (-?\\d+)", cookie1Ref))) {
+                UdpTestPeer.recv("phy 7 cp cookie_response ACK (-?\\d+)", cookie1Ref))) {
             assertDoesNotThrow(() -> cProtocol.receive());
             peer1.await(2000);
             try (UdpTestPeer peer2 = UdpTestPeer.start(
                     client2Port,
                     UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
-                    UdpTestPeer.recvCapture("phy 7 cp cookie_response ACK (-?\\d+)", cookie2Ref))) {
+                    UdpTestPeer.recv("phy 7 cp cookie_response ACK (-?\\d+)", cookie2Ref))) {
                 assertDoesNotThrow(() -> cProtocol.receive());
                 peer2.await(2000);
 
@@ -122,9 +106,29 @@ public class CPCookieServerCkRespTest extends BaseNetworkTest {
         }
     }
 
+    void testCookieRespTimeout() throws IOException, IWProtocolException {
+        CPProtocol shortTtlCp = new CPProtocol(this.phyProtocol, true, null, 1);
+    }
+
     // TODO: make tests
     // * 1 client timeout: configure short ttl, req cookie twice w/ short sleep
     // in between, check that 1 cookie in hash map and diff cookie values received
     // * 2 clients w/ max clients=1: check that second client gets a NACK back
+
+    @Test
+    void testIllegalMsgs() throws IOException, IWProtocolException {
+        try (UdpTestPeer peer = UdpTestPeer.start(
+                this.clientPort,
+                UdpTestPeer.send("phy 5 cp cookie_request", this.addr, this.cookieServerPort),
+                UdpTestPeer.send("phy 7 cpp cookie_request", this.addr, this.cookieServerPort),
+                UdpTestPeer.send("phy 7 cp cookie_requestt", this.addr, this.cookieServerPort),
+                UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
+                UdpTestPeer.recv("phy 7 cp cookie_response ACK -?\\d+"))) {
+            assertDoesNotThrow(() -> cProtocol.receive());
+            peer.await(2000);
+
+            assertEquals(getCookieMap(this.cProtocol).size(), 1);
+        }
+    }
 
 }
