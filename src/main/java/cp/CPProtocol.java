@@ -161,7 +161,7 @@ public class CPProtocol extends Protocol {
         send(resp.getData(), conf);
     }
 
-    /*
+    /**
      * Process a cookie request from a client.
      * 
      * Cookie renewal is idempotent: if the client requests a cookie while its
