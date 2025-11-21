@@ -16,7 +16,7 @@ public class CPCookieServer {
         // Set up command protocol
         CPProtocol cp;
         try {
-            cp = new CPProtocol(phy, true);
+            cp = new CPProtocol(phy, true, null);
         } catch (Exception e) {
             return;
         }

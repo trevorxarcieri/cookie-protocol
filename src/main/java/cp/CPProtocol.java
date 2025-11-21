@@ -42,28 +42,17 @@ public class CPProtocol extends Protocol {
     }
 
     // Constructors for servers
-    public CPProtocol(PhyProtocol phyP, boolean isCookieServer) {
+    public CPProtocol(PhyProtocol phyP, boolean isCookieServer, Integer cookie_lifetime_ms) {
         this.PhyProto = phyP;
         if (isCookieServer) {
             this.role = cp_role.COOKIE;
             this.cookieMap = new HashMap<>();
             this.rnd = new Random();
+            this.cookie_lifetime_ms = cookie_lifetime_ms == null ? COOKIE_LIFETIME_MS : cookie_lifetime_ms;
         } else {
             this.role = cp_role.COMMAND;
             this.pendingCommands = new ArrayList<>();
         }
-    }
-
-    /**
-     * CPProtocol constructor for a cookie server which supports custom cookie
-     * lifetime duration.
-     */
-    public CPProtocol(PhyProtocol phyP, int cookie_lifetime_ms) {
-        this.PhyProto = phyP;
-        this.cookie_lifetime_ms = cookie_lifetime_ms;
-        this.role = cp_role.COOKIE;
-        this.cookieMap = new HashMap<>();
-        this.rnd = new Random();
     }
 
     public void setCookieServer(InetAddress rname, int rp) throws UnknownHostException {
