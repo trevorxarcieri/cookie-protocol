@@ -125,7 +125,7 @@ public class CPProtocol extends Protocol {
                         Msg in = this.PhyProto.receive();
                         if (((PhyConfiguration) in.getConfiguration()).getPid() != proto_id.CP) // if not CP protocol
                             continue;
-                        resMsg = ((CPMsg) resMsg).parse(in.getData());
+                        resMsg = ((CPMsg) resMsg).parse(in);
                         if (resMsg instanceof CPCookieRequestMsg) {
                             cookie_process((CPMsg) resMsg);
                             return resMsg;
