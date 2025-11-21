@@ -186,9 +186,8 @@ public class CPProtocol extends Protocol {
         reqMsg.create(null);
         Msg resMsg = new CPMsg();
 
-        boolean waitForResp = true; // TODO: remove and just use break
         int count = 0;
-        while (waitForResp && count < 3) {
+        while (count < 3) {
             this.PhyProto.send(new String(reqMsg.getDataBytes()), this.PhyConfigCookieServer);
 
             try {
@@ -197,7 +196,7 @@ public class CPProtocol extends Protocol {
                     continue;
                 resMsg = ((CPMsg) resMsg).parse(in.getData());
                 if (resMsg instanceof CPCookieResponseMsg)
-                    waitForResp = false;
+                    break;
             } catch (SocketTimeoutException e) {
                 count += 1;
             } catch (IWProtocolException ignored) {
