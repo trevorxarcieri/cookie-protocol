@@ -11,8 +11,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.net.UnknownHostException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,12 +27,7 @@ public class CPClientCookieRequestTest extends BaseNetworkTest {
     }
 
     private int getCookie() {
-        return assertDoesNotThrow(() -> {
-            MethodHandles.Lookup l = MethodHandles.privateLookupIn(CPProtocol.class,
-                    MethodHandles.lookup());
-            VarHandle vh = l.findVarHandle(CPProtocol.class, "cookie", int.class);
-            return (int) vh.get(this.cProtocol);
-        });
+        return super.getCookie(this.cProtocol);
     }
 
     @Test

@@ -1,10 +1,16 @@
 package net.utils;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 import org.junit.jupiter.api.BeforeEach;
+
+import cp.CPProtocol;
 
 public class BaseNetworkTest {
     private static final String SERVER_NAME = "localhost";
@@ -21,9 +27,18 @@ public class BaseNetworkTest {
         this.cookieServerPort = findFreePort();
     }
 
-    protected int findFreePort() throws IOException {
+    protected static int findFreePort() throws IOException {
         try (DatagramSocket socket = new DatagramSocket(0)) {
             return socket.getLocalPort();
         }
+    }
+
+    protected static int getCookie(CPProtocol cProtocol) {
+        return assertDoesNotThrow(() -> {
+            MethodHandles.Lookup l = MethodHandles.privateLookupIn(CPProtocol.class,
+                    MethodHandles.lookup());
+            VarHandle vh = l.findVarHandle(CPProtocol.class, "cookie", int.class);
+            return (int) vh.get(cProtocol);
+        });
     }
 }
