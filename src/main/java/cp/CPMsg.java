@@ -52,4 +52,10 @@ class CPMsg extends Msg {
         return parsedMsg;
     }
 
+    protected Msg parse(Msg m) throws IWProtocolException {
+        Msg ret = parse(m.getData());
+        ret.setConfiguration(m.getConfiguration());
+        return ret;
+    }
+
 }
