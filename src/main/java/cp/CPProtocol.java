@@ -114,8 +114,11 @@ public class CPProtocol extends Protocol {
                 }
                 if (i == 3) // if all 3 tries timed out
                     throw new ReceiveCommandResponseException(); // unable to receive command response
-                throw new CookieTimeoutException(); // otherwise, we must've hit the break due to a timed-out cookie and
-                                                    // thus a rejected command
+
+                // Otherwise, we must've hit the break due to a rejected command which means the
+                // cookie most likely timed out
+                this.cookie = -1; // invalidate cookie
+                throw new CookieTimeoutException();
             case COOKIE:
                 while (true) { // block until cookie is received
                     try {
