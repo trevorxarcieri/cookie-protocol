@@ -80,7 +80,6 @@ public class CPClientAndCkServIntTest extends BaseNetworkTest {
             assertEquals(((CPCommandResponseMsg) result).getId(), 0);
             assertEquals(((CPCommandResponseMsg) result).getSuccess(), true);
             assertEquals(result.getData(), "{numSuccessfullyProcessedCommands: 1, cookieTtlS: 40}");
-            // TODO: use JSON parsing library to parse this response
         }
     }
 
