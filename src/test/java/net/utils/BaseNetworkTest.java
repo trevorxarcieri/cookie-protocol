@@ -67,6 +67,16 @@ public class BaseNetworkTest {
         return t;
     }
 
+    protected void waitForThreads(Thread... threads) {
+        for (Thread t : threads) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                fail("Test threads interrupted: " + e.getMessage());
+            }
+        }
+    }
+
     @FunctionalInterface
     protected interface ThrowingRunnable {
         void run() throws Exception;

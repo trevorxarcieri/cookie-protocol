@@ -43,12 +43,7 @@ public class CPClientAndCkServIntTest extends BaseNetworkTest {
                 UdpTestPeer.send("phy 7 cp command_response 0 ok 0 2368828647", this.addr, this.clientPort))) {
             Thread ckServThread = runAsync(() -> ckServCpP.receive());
             Thread clientThread = runAsync(() -> clientCpP.send("print Hello, World!", null));
-            try {
-                ckServThread.join();
-                clientThread.join();
-            } catch (InterruptedException e) {
-                fail("Test threads interrupted: " + e.getMessage());
-            }
+            waitForThreads(ckServThread, clientThread);
             Msg result = clientCpP.receive();
             peer.await(2000);
             assertInstanceOf(CPCommandResponseMsg.class, result);
@@ -68,12 +63,7 @@ public class CPClientAndCkServIntTest extends BaseNetworkTest {
                         this.addr, this.clientPort))) {
             Thread ckServThread = runAsync(() -> ckServCpP.receive());
             Thread clientThread = runAsync(() -> clientCpP.send("status", null));
-            try {
-                ckServThread.join();
-                clientThread.join();
-            } catch (InterruptedException e) {
-                fail("Test threads interrupted: " + e.getMessage());
-            }
+            waitForThreads(ckServThread, clientThread);
             Msg result = clientCpP.receive();
             peer.await(2000);
             assertInstanceOf(CPCommandResponseMsg.class, result);
@@ -93,12 +83,7 @@ public class CPClientAndCkServIntTest extends BaseNetworkTest {
                         this.addr, this.clientPort))) {
             Thread ckServThread = runAsync(() -> ckServCpP.receive());
             Thread clientThread = runAsync(() -> clientCpP.send("status", null));
-            try {
-                ckServThread.join();
-                clientThread.join();
-            } catch (InterruptedException e) {
-                fail("Test threads interrupted: " + e.getMessage());
-            }
+            waitForThreads(ckServThread, clientThread);
             assertThrows(CookieTimeoutException.class, () -> clientCpP.receive());
             peer.await(2000);
             assertEquals(getCookie(this.clientCpP), -1);
