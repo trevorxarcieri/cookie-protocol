@@ -28,6 +28,6 @@ public class Cookie {
         }
 
         Cookie c = (Cookie) o;
-        return ((this.timeOfCreation == c.getTimeOfCreation()) && (this.cookieValue == c.getCookieValue()));
+        return this.cookieValue == c.getCookieValue(); // consider cookies equal iff their values are equal
     }
 }
