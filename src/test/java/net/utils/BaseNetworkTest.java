@@ -53,4 +53,10 @@ public class BaseNetworkTest {
             return (HashMap<PhyConfiguration, Cookie>) vh.get(cProtocol);
         });
     }
+
+    protected static Thread runAsync(Runnable task) {
+        Thread t = new Thread(task);
+        t.start();
+        return t;
+    }
 }
