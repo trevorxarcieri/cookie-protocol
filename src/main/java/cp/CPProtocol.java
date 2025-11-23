@@ -191,7 +191,11 @@ public class CPProtocol extends Protocol {
             return;
         }
 
-        Cookie ck = new Cookie(System.currentTimeMillis(), rnd.nextInt()); // create cookie
+        int cookieVal;
+        do {
+            cookieVal = rnd.nextInt() & 0x7FFFFFFF; // ensure cookie value is positive
+        } while (cookieMap.containsValue(new Cookie(0, cookieVal))); // ensure cookie value is unique
+        Cookie ck = new Cookie(System.currentTimeMillis(), cookieVal); // create cookie
         send_cookie_resp(ck, conf); // send cookie response
         cookieMap.put(conf, ck); // add cookie to hash map
     }
