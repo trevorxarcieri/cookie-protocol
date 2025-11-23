@@ -36,7 +36,7 @@ public class CPCookieServerCkRespTest extends BaseNetworkTest {
         long minTocMs = System.currentTimeMillis();
         try (UdpTestPeer peer = UdpTestPeer.start(
                 this.clientPort, UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
-                UdpTestPeer.recv("phy 7 cp cookie_response ACK (-?\\d+)", cookieRef))) {
+                UdpTestPeer.recv("phy 7 cp cookie_response ACK (\\d+)", cookieRef))) {
             assertDoesNotThrow(() -> cProtocol.receive());
             peer.await(2000);
 
@@ -59,9 +59,9 @@ public class CPCookieServerCkRespTest extends BaseNetworkTest {
         try (UdpTestPeer peer = UdpTestPeer.start(
                 this.clientPort,
                 UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
-                UdpTestPeer.recv("phy 7 cp cookie_response ACK (-?\\d+)", cookie1Ref),
+                UdpTestPeer.recv("phy 7 cp cookie_response ACK (\\d+)", cookie1Ref),
                 UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
-                UdpTestPeer.recv("phy 7 cp cookie_response ACK (-?\\d+)", cookie2Ref))) {
+                UdpTestPeer.recv("phy 7 cp cookie_response ACK (\\d+)", cookie2Ref))) {
             assertDoesNotThrow(() -> cProtocol.receive());
             assertDoesNotThrow(() -> cProtocol.receive());
             peer.await(2000);
@@ -79,13 +79,13 @@ public class CPCookieServerCkRespTest extends BaseNetworkTest {
         try (UdpTestPeer peer1 = UdpTestPeer.start(
                 this.clientPort,
                 UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
-                UdpTestPeer.recv("phy 7 cp cookie_response ACK (-?\\d+)", cookie1Ref))) {
+                UdpTestPeer.recv("phy 7 cp cookie_response ACK (\\d+)", cookie1Ref))) {
             assertDoesNotThrow(() -> cProtocol.receive());
             peer1.await(2000);
             try (UdpTestPeer peer2 = UdpTestPeer.start(
                     client2Port,
                     UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
-                    UdpTestPeer.recv("phy 7 cp cookie_response ACK (-?\\d+)", cookie2Ref))) {
+                    UdpTestPeer.recv("phy 7 cp cookie_response ACK (\\d+)", cookie2Ref))) {
                 assertDoesNotThrow(() -> cProtocol.receive());
                 peer2.await(2000);
 
@@ -112,9 +112,9 @@ public class CPCookieServerCkRespTest extends BaseNetworkTest {
         try (UdpTestPeer peer = UdpTestPeer.start(
                 this.clientPort,
                 UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
-                UdpTestPeer.recv("phy 7 cp cookie_response ACK -?\\d+"),
+                UdpTestPeer.recv("phy 7 cp cookie_response ACK \\d+"),
                 UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
-                UdpTestPeer.recv("phy 7 cp cookie_response ACK -?\\d+"))) {
+                UdpTestPeer.recv("phy 7 cp cookie_response ACK \\d+"))) {
             assertDoesNotThrow(() -> shortTtlCp.receive());
             long minTocMs = System.currentTimeMillis();
             Thread.sleep(2);
@@ -142,7 +142,7 @@ public class CPCookieServerCkRespTest extends BaseNetworkTest {
         try (UdpTestPeer peer1 = UdpTestPeer.start(
                 this.clientPort,
                 UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
-                UdpTestPeer.recv("phy 7 cp cookie_response ACK (-?\\d+)", cookieRef))) {
+                UdpTestPeer.recv("phy 7 cp cookie_response ACK (\\d+)", cookieRef))) {
             assertDoesNotThrow(() -> lowClientsCp.receive());
             peer1.await(2000);
             try (UdpTestPeer peer2 = UdpTestPeer.start(
@@ -175,7 +175,7 @@ public class CPCookieServerCkRespTest extends BaseNetworkTest {
                 UdpTestPeer.send("phy 7 cpp cookie_request", this.addr, this.cookieServerPort),
                 UdpTestPeer.send("phy 7 cp cookie_requestt", this.addr, this.cookieServerPort),
                 UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
-                UdpTestPeer.recv("phy 7 cp cookie_response ACK -?\\d+"))) {
+                UdpTestPeer.recv("phy 7 cp cookie_response ACK \\d+"))) {
             assertDoesNotThrow(() -> cProtocol.receive());
             peer.await(2000);
 

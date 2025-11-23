@@ -38,7 +38,7 @@ public class CPClientAndCkServIntTest extends BaseNetworkTest {
     void testCPClientAndCkServPrintIntegration() throws IWProtocolException, IOException {
         try (UdpTestPeer peer = UdpTestPeer.start(
                 this.commandServerPort,
-                UdpTestPeer.recv("phy 7 cp command 0 -?\\d+ 19 print Hello, World! \\d+"),
+                UdpTestPeer.recv("phy 7 cp command 0 \\d+ 19 print Hello, World! \\d+"),
                 UdpTestPeer.send("phy 7 cp command_response 0 ok 0 2368828647", this.addr, this.clientPort))) {
             Thread ckServThread = runAsync(() -> ckServCpP.receive());
             Thread clientThread = runAsync(() -> clientCpP.send("print Hello, World!", null));
@@ -56,7 +56,7 @@ public class CPClientAndCkServIntTest extends BaseNetworkTest {
     void testCPClientAndCkServStatusIntegration() throws IWProtocolException, IOException {
         try (UdpTestPeer peer = UdpTestPeer.start(
                 this.commandServerPort,
-                UdpTestPeer.recv("phy 7 cp command 0 -?\\d+ 6 status \\d+"),
+                UdpTestPeer.recv("phy 7 cp command 0 \\d+ 6 status \\d+"),
                 UdpTestPeer.send(
                         "phy 7 cp command_response 0 ok 53 {numSuccessfullyProcessedCommands: 1, cookieTtlS: 40} 3491006493",
                         this.addr, this.clientPort))) {
@@ -76,7 +76,7 @@ public class CPClientAndCkServIntTest extends BaseNetworkTest {
     void testCPClientAndCkServStatusFailIntegration() throws IWProtocolException, IOException {
         try (UdpTestPeer peer = UdpTestPeer.start(
                 this.commandServerPort,
-                UdpTestPeer.recv("phy 7 cp command 0 -?\\d+ 6 status \\d+"),
+                UdpTestPeer.recv("phy 7 cp command 0 \\d+ 6 status \\d+"),
                 UdpTestPeer.send(
                         "phy 7 cp command_response 0 error 15 Invalid cookie. 2942514232",
                         this.addr, this.clientPort))) {
