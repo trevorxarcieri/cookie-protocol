@@ -184,10 +184,11 @@ public class CPProtocol extends Protocol {
             return;
         }
 
-        if (cookieMap.size() >= CP_HASHMAP_SIZE) { // if hashmap is full, deny cookie request
+        if (cookieMap.size() >= max_num_clients) { // if hashmap is full, deny cookie request
             CPCookieResponseMsg resp = new CPCookieResponseMsg(false);
             resp.create("Max number of clients currently have a valid cookie. Please try again later.");
             send(resp.getData(), conf);
+            return;
         }
 
         Cookie ck = new Cookie(System.currentTimeMillis(), rnd.nextInt()); // create cookie
