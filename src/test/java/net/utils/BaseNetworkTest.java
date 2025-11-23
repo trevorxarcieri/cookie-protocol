@@ -1,6 +1,7 @@
 package net.utils;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -54,9 +55,20 @@ public class BaseNetworkTest {
         });
     }
 
-    protected static Thread runAsync(Runnable task) {
-        Thread t = new Thread(task);
+    protected static Thread runAsync(ThrowingRunnable task) {
+        Thread t = new Thread(() -> {
+            try {
+                assertDoesNotThrow(() -> task.run());
+            } catch (Exception e) {
+                fail("Async task failed: " + e.getMessage());
+            }
+        });
         t.start();
         return t;
+    }
+
+    @FunctionalInterface
+    protected interface ThrowingRunnable {
+        void run() throws Exception;
     }
 }
