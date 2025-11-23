@@ -106,14 +106,66 @@ public class CPCookieServerCkRespTest extends BaseNetworkTest {
         }
     }
 
-    void testCookieRespTimeout() throws IOException, IWProtocolException {
+    @Test
+    void testCookieRespTimeout() throws IOException, InterruptedException, IWProtocolException {
         CPProtocol shortTtlCp = new CPProtocol(this.phyProtocol, true, null, 1);
+        try (UdpTestPeer peer = UdpTestPeer.start(
+                this.clientPort,
+                UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
+                UdpTestPeer.recv("phy 7 cp cookie_response ACK -?\\d+"),
+                UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
+                UdpTestPeer.recv("phy 7 cp cookie_response ACK -?\\d+"))) {
+            assertDoesNotThrow(() -> shortTtlCp.receive());
+            long minTocMs = System.currentTimeMillis();
+            Thread.sleep(2);
+            assertDoesNotThrow(() -> shortTtlCp.receive());
+            peer.await(2000);
+
+            HashMap<PhyConfiguration, Cookie> cookieMap = getCookieMap(shortTtlCp);
+            assertEquals(cookieMap.size(), 1); // only 1 cookie exists in the cookie server
+            assertTrue(
+                    cookieMap
+                            .values()
+                            .iterator()
+                            .next()
+                            .getTimeOfCreation() > minTocMs // this cookie was created newly for the second request
+            );
+        }
     }
 
-    // TODO: make tests
-    // * 1 client timeout: configure short ttl, req cookie twice w/ short sleep
-    // in between, check that 1 cookie in hash map and diff cookie values received
-    // * 2 clients w/ max clients=1: check that second client gets a NACK back
+    @Test
+    void testCookieRespTooManyClients() throws IOException, IWProtocolException {
+        CPProtocol lowClientsCp = new CPProtocol(this.phyProtocol, true, 1, null);
+        AtomicReference<String> cookieRef = new AtomicReference<>();
+        AtomicReference<String> errorMsgRef = new AtomicReference<>();
+        int client2Port = findFreePort();
+        try (UdpTestPeer peer1 = UdpTestPeer.start(
+                this.clientPort,
+                UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
+                UdpTestPeer.recv("phy 7 cp cookie_response ACK (-?\\d+)", cookieRef))) {
+            assertDoesNotThrow(() -> lowClientsCp.receive());
+            peer1.await(2000);
+            try (UdpTestPeer peer2 = UdpTestPeer.start(
+                    client2Port,
+                    UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
+                    UdpTestPeer.recv("phy 7 cp cookie_response NAK (.*)", errorMsgRef))) {
+                assertDoesNotThrow(() -> lowClientsCp.receive());
+                peer2.await(2000);
+
+                HashMap<PhyConfiguration, Cookie> cookieMap = getCookieMap(lowClientsCp);
+                assertEquals(cookieMap.size(), 1);
+
+                PhyConfiguration client1Conf = new PhyConfiguration(this.addr, this.clientPort, proto_id.CP);
+                PhyConfiguration client2Conf = new PhyConfiguration(this.addr, client2Port, proto_id.CP);
+                assertTrue(cookieMap.containsKey(client1Conf));
+                assertFalse(cookieMap.containsKey(client2Conf));
+
+                Cookie ck1 = cookieMap.get(client1Conf);
+                assertEquals(cookieRef.get(), "" + ck1.getCookieValue());
+                assertTrue(errorMsgRef.get().contains("Max number of clients"));
+            }
+        }
+    }
 
     @Test
     void testIllegalMsgs() throws IOException, IWProtocolException {
