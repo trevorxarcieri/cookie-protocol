@@ -15,6 +15,7 @@ import core.Protocol;
 import exceptions.CookieRequestException;
 import exceptions.CookieTimeoutException;
 import exceptions.IWProtocolException;
+import exceptions.IllegalMsgException;
 import exceptions.ReceiveCommandResponseException;
 import phy.PhyConfiguration;
 import phy.PhyProtocol;
@@ -59,7 +60,7 @@ public class CPProtocol extends Protocol {
             this.cookie_lifetime_ms = cookie_lifetime_ms == null ? COOKIE_LIFETIME_MS : cookie_lifetime_ms;
         } else {
             this.role = cp_role.COMMAND;
-            this.pendingCommands = new ArrayList<>();
+            this.pendingCommands = new ArrayList<CPCommandMsg>();
         }
     }
 
@@ -83,6 +84,7 @@ public class CPProtocol extends Protocol {
                 this.id++; // guarantee next send will have higher id
                 break;
             case COOKIE:
+            case COMMAND:
                 this.PhyProto.send(s, config);
                 break;
             default:
@@ -142,9 +144,9 @@ public class CPProtocol extends Protocol {
                         if (((PhyConfiguration) in.getConfiguration()).getPid() != proto_id.CP) // if not CP protocol
                             continue;
                         resMsg = ((CPMsg) resMsg).parse(in);
-                        if (resMsg instanceof CPCommandMsg) {
-                            Msg resp = command_process((CPMsg) resMsg);
-                            return resp;
+                        if (resMsg instanceof CPCommandMsg || resMsg instanceof CPCookieResponseMsg) {
+                            Msg res = command_process((CPMsg) resMsg);
+                            return res;
                         }
                     } catch (IWProtocolException ignored) {
                     }
@@ -154,12 +156,17 @@ public class CPProtocol extends Protocol {
         }
     }
 
-    // CookieServer processing of incoming messages
     // Only CookieCommandMsg are processed, all others are ignored
     private Msg command_process(CPMsg cpmIn) throws IWProtocolException {
-        CPCommandMsg stored = null;
+        if (cpmIn instanceof CPCommandMsg cmdMsg) {
+            String cmdAndMsgFields = cmdMsg.getData();
+            if (cmdAndMsgFields != "status" && !cmdAndMsgFields.startsWith("print "))
+                throw new IllegalMsgException();
 
-        return stored;
+            // send(new CookieVerificationMsg(), this.PhyConfigCookieServer);
+            this.pendingCommands.add(cmdMsg);
+        }
+        return new CPMsg();
     }
 
     private void evict_expired_cookies() {
