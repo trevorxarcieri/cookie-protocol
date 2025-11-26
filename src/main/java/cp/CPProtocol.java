@@ -135,6 +135,20 @@ public class CPProtocol extends Protocol {
                     } catch (IWProtocolException ignored) {
                     }
                 }
+            case COMMAND:
+                while (true) { // block until command is received
+                    try {
+                        Msg in = this.PhyProto.receive();
+                        if (((PhyConfiguration) in.getConfiguration()).getPid() != proto_id.CP) // if not CP protocol
+                            continue;
+                        resMsg = ((CPMsg) resMsg).parse(in);
+                        if (resMsg instanceof CPCommandMsg) {
+                            Msg resp = command_process((CPMsg) resMsg);
+                            return resp;
+                        }
+                    } catch (IWProtocolException ignored) {
+                    }
+                }
             default:
                 throw new RuntimeException("Receive method not implemented for role " + this.role + ".");
         }
