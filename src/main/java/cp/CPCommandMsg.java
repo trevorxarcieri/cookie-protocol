@@ -1,6 +1,7 @@
 package cp;
 
 import core.Msg;
+import exceptions.IWProtocolException;
 import exceptions.IllegalMsgException;
 
 class CPCommandMsg extends CPMsg {
@@ -35,10 +36,24 @@ class CPCommandMsg extends CPMsg {
     }
 
     @Override
-    protected Msg parse(String sentence) throws IllegalMsgException {
+    protected Msg parse(String sentence) throws IWProtocolException {
         if (!sentence.startsWith(CP_CMD_HEADER)) {
             throw new IllegalMsgException();
         }
+
+        String[] parts = sentence.split("\\s+", 5);
+        if (parts.length < 6)
+            throw new IllegalMsgException();
+
+        try {
+            this.id = Integer.parseInt(parts[1]);
+            this.cookie = Integer.parseInt(parts[2]);
+        } catch (NumberFormatException e) {
+            throw new IllegalMsgException();
+        }
+
+        this.data = super.getMsgField(sentence, parts);
+
         return this;
     }
 }
