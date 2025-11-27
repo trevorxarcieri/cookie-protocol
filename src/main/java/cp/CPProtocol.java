@@ -99,7 +99,7 @@ public class CPProtocol extends Protocol {
 
     @Override
     public Msg receive() throws IOException, IWProtocolException {
-        Msg resMsg = new CPMsg();
+        Msg recMsg = new CPMsg();
 
         switch (this.role) {
             case CLIENT:
@@ -109,12 +109,12 @@ public class CPProtocol extends Protocol {
                         Msg in = this.PhyProto.receive(CP_TIMEOUT);
                         if (((PhyConfiguration) in.getConfiguration()).getPid() != proto_id.CP) // if not CP protocol
                             continue; // do not count this as a try
-                        resMsg = ((CPMsg) resMsg).parse(in.getData());
-                        if (resMsg instanceof CPCommandResponseMsg
-                                && ((CPCommandResponseMsg) resMsg).getId() == this.id - 1) {
-                            if (!((CPCommandResponseMsg) resMsg).getSuccess())
+                        recMsg = ((CPMsg) recMsg).parse(in.getData());
+                        if (recMsg instanceof CPCommandResponseMsg
+                                && ((CPCommandResponseMsg) recMsg).getId() == this.id - 1) {
+                            if (!((CPCommandResponseMsg) recMsg).getSuccess())
                                 break; // command was rejected, so cookie timed out
-                            return resMsg;
+                            return recMsg;
                         }
                     } catch (SocketTimeoutException e) {
                         i++;
@@ -134,10 +134,10 @@ public class CPProtocol extends Protocol {
                         Msg in = this.PhyProto.receive();
                         if (((PhyConfiguration) in.getConfiguration()).getPid() != proto_id.CP) // if not CP protocol
                             continue;
-                        resMsg = ((CPMsg) resMsg).parse(in);
-                        if (resMsg instanceof CPCookieRequestMsg || resMsg instanceof CPCookieVerReqMsg) {
-                            cookie_process((CPMsg) resMsg);
-                            return resMsg;
+                        recMsg = ((CPMsg) recMsg).parse(in);
+                        if (recMsg instanceof CPCookieRequestMsg || recMsg instanceof CPCookieVerReqMsg) {
+                            cookie_process((CPMsg) recMsg);
+                            return recMsg;
                         }
                     } catch (IWProtocolException ignored) {
                     }
@@ -148,9 +148,9 @@ public class CPProtocol extends Protocol {
                         Msg in = this.PhyProto.receive();
                         if (((PhyConfiguration) in.getConfiguration()).getPid() != proto_id.CP) // if not CP protocol
                             continue;
-                        resMsg = ((CPMsg) resMsg).parse(in);
-                        if (resMsg instanceof CPCommandMsg || resMsg instanceof CPCookieVerRespMsg) {
-                            Msg res = command_process((CPMsg) resMsg);
+                        recMsg = ((CPMsg) recMsg).parse(in);
+                        if (recMsg instanceof CPCommandMsg || recMsg instanceof CPCookieVerRespMsg) {
+                            Msg res = command_process((CPMsg) recMsg);
                             return res;
                         }
                     } catch (IWProtocolException ignored) {
@@ -212,21 +212,21 @@ public class CPProtocol extends Protocol {
             if (cmdMsg.getCommandType() == CommandType.UNKNOWN)
                 throw new IllegalCommandException();
 
-            int cookie = cmdMsg.getCookie();
-            CPCookieVerReqMsg verReqMsg = new CPCookieVerReqMsg(cookie);
+            int clientCookie = cmdMsg.getCookie();
+            CPCookieVerReqMsg verReqMsg = new CPCookieVerReqMsg(clientCookie);
             String toSend = verReqMsg.create(confIn);
             send(toSend, this.PhyConfigCookieServer); // send cookie verification request to cookie server
 
             // Store pending command (in the hash map by cookie) to be processed upon cookie
             // verification response.
-            this.pendingCommands.computeIfAbsent(cookie, k -> new ArrayList<>()).add(cmdMsg);
+            this.pendingCommands.computeIfAbsent(clientCookie, k -> new ArrayList<>()).add(cmdMsg);
         } else if (cpmIn instanceof CPCookieVerRespMsg ckVerRespMsg) {// process cookie verification response
             if (!confIn.equals(this.PhyConfigCookieServer)) { // if not from cookie server, do not process
                 throw new UnauthorizedVerificationException();
             }
 
-            int cookie = ckVerRespMsg.getCookie();
-            ArrayList<CPCommandMsg> pendingCmdsForCk = this.pendingCommands.get(cookie);
+            int clientCookie = ckVerRespMsg.getCookie();
+            ArrayList<CPCommandMsg> pendingCmdsForCk = this.pendingCommands.get(clientCookie);
             if (pendingCmdsForCk == null) { // if no pending commands for cookie
                 throw new NoSuchCookieException();
             }
@@ -237,7 +237,7 @@ public class CPProtocol extends Protocol {
                 CPCommandMsg verifiedCmd = verifyPendingCommand(pendingCmd, ckVerRespMsg);
 
                 if (pendingCmdsForCk.isEmpty()) {
-                    this.pendingCommands.remove(cookie); // remove cookie entry if no more pending commands
+                    this.pendingCommands.remove(clientCookie); // remove cookie entry if no more pending commands
                 }
                 if (verifiedCmd != null) { // if pending command was successfully verified
                     return verifiedCmd; // return verified command to the application
