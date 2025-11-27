@@ -270,19 +270,18 @@ public class CPProtocol extends Protocol {
      */
     private void cookie_process(CPMsg cpmIn) throws IWProtocolException, IOException {
         evictExpiredCookies(); // evict old cookies to make room for the upcoming new cookie if possible
+        PhyConfiguration confIn = (PhyConfiguration) cpmIn.getConfiguration();
 
-        PhyConfiguration conf = (PhyConfiguration) cpmIn.getConfiguration();
-
-        if (cookieMap.containsKey(conf)) { // if client already has a valid cookie, resend it
-            Cookie ck = cookieMap.get(conf);
-            send(new CPCookieResponseMsg().create(ck), conf);
+        if (cookieMap.containsKey(confIn)) { // if client already has a valid cookie, resend it
+            Cookie ck = cookieMap.get(confIn);
+            send(new CPCookieResponseMsg().create(ck), confIn);
             return;
         }
 
         if (cookieMap.size() >= maxNumClients) { // if hashmap is full, deny cookie request
             CPCookieResponseMsg resp = new CPCookieResponseMsg(false);
             resp.create("Max number of clients currently have a valid cookie. Please try again later.");
-            send(resp.getData(), conf);
+            send(resp.getData(), confIn);
             return;
         }
 
@@ -291,8 +290,8 @@ public class CPProtocol extends Protocol {
             cookieVal = rnd.nextInt() & 0x7FFFFFFF; // ensure cookie value is positive
         } while (cookieMap.containsValue(new Cookie(0, cookieVal))); // ensure cookie value is unique
         Cookie ck = new Cookie(System.currentTimeMillis(), cookieVal); // create cookie
-        send(new CPCookieResponseMsg().create(ck), conf); // send cookie response
-        cookieMap.put(conf, ck); // add cookie to hash map
+        send(new CPCookieResponseMsg().create(ck), confIn); // send cookie response
+        cookieMap.put(confIn, ck); // add cookie to hash map
     }
 
     // Method for the client to request a cookie
