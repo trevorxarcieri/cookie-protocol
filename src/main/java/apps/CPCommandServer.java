@@ -5,6 +5,7 @@ import exceptions.IWProtocolException;
 import phy.PhyProtocol;
 
 import java.io.IOException;
+import java.net.InetAddress;
 
 public class CPCommandServer {
     protected static final int COMMAND_SERVER_PORT = 2000;
@@ -17,6 +18,7 @@ public class CPCommandServer {
         CPProtocol cp;
         try {
             cp = new CPProtocol(phy, false, null, null);
+            cp.setCookieServer(InetAddress.getByName(CPClient.SERVER_NAME), CPCookieServer.COOKIE_SERVER_PORT);
         } catch (Exception e) {
             return;
         }
