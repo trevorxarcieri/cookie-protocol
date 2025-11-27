@@ -82,28 +82,28 @@ public class CPCookieServerCkRespTest extends BaseNetworkTest {
                 UdpTestPeer.recv("phy 7 cp cookie_response ACK (\\d+)", cookie1Ref))) {
             assertDoesNotThrow(() -> cProtocol.receive());
             peer1.await(2000);
-            try (UdpTestPeer peer2 = UdpTestPeer.start(
-                    client2Port,
-                    UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
-                    UdpTestPeer.recv("phy 7 cp cookie_response ACK (\\d+)", cookie2Ref))) {
-                assertDoesNotThrow(() -> cProtocol.receive());
-                peer2.await(2000);
-
-                HashMap<PhyConfiguration, Cookie> cookieMap = getCookieMap(this.cProtocol);
-                assertEquals(cookieMap.size(), 2);
-
-                PhyConfiguration client1Conf = new PhyConfiguration(this.addr, this.clientPort, proto_id.CP);
-                PhyConfiguration client2Conf = new PhyConfiguration(this.addr, client2Port, proto_id.CP);
-                assertTrue(cookieMap.containsKey(client1Conf));
-                assertTrue(cookieMap.containsKey(client2Conf));
-
-                Cookie ck1 = cookieMap.get(client1Conf);
-                Cookie ck2 = cookieMap.get(client2Conf);
-                assertEquals(cookie1Ref.get(), "" + ck1.getCookieValue());
-                assertEquals(cookie2Ref.get(), "" + ck2.getCookieValue());
-                assertTrue(ck1.getTimeOfCreation() < ck2.getTimeOfCreation());
-            }
         }
+        try (UdpTestPeer peer2 = UdpTestPeer.start(
+                client2Port,
+                UdpTestPeer.send("phy 7 cp cookie_request", this.addr, this.cookieServerPort),
+                UdpTestPeer.recv("phy 7 cp cookie_response ACK (\\d+)", cookie2Ref))) {
+            assertDoesNotThrow(() -> cProtocol.receive());
+            peer2.await(2000);
+        }
+
+        HashMap<PhyConfiguration, Cookie> cookieMap = getCookieMap(this.cProtocol);
+        assertEquals(cookieMap.size(), 2);
+
+        PhyConfiguration client1Conf = new PhyConfiguration(this.addr, this.clientPort, proto_id.CP);
+        PhyConfiguration client2Conf = new PhyConfiguration(this.addr, client2Port, proto_id.CP);
+        assertTrue(cookieMap.containsKey(client1Conf));
+        assertTrue(cookieMap.containsKey(client2Conf));
+
+        Cookie ck1 = cookieMap.get(client1Conf);
+        Cookie ck2 = cookieMap.get(client2Conf);
+        assertEquals(cookie1Ref.get(), "" + ck1.getCookieValue());
+        assertEquals(cookie2Ref.get(), "" + ck2.getCookieValue());
+        assertTrue(ck1.getTimeOfCreation() < ck2.getTimeOfCreation());
     }
 
     @Test
