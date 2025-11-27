@@ -15,6 +15,7 @@ public class Configuration {
 		return nextLowerProtocol;
 	}
 
+	@SuppressWarnings("unused")
 	private void setNextLowerProtocol(Protocol nextLowerProtocol) {
 		this.nextLowerProtocol = nextLowerProtocol;
 	}
