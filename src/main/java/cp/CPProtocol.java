@@ -6,6 +6,7 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Random;
 
@@ -15,8 +16,10 @@ import core.Protocol;
 import exceptions.CookieRequestException;
 import exceptions.CookieTimeoutException;
 import exceptions.IWProtocolException;
-import exceptions.IllegalMsgException;
+import exceptions.IllegalCommandException;
+import exceptions.NoSuchCookieException;
 import exceptions.ReceiveCommandResponseException;
+import exceptions.UnauthorizedVerificationException;
 import phy.PhyConfiguration;
 import phy.PhyProtocol;
 
@@ -33,8 +36,9 @@ public class CPProtocol extends Protocol {
     private final PhyProtocol PhyProto;
     private final cp_role role;
     HashMap<PhyConfiguration, Cookie> cookieMap;
-    ArrayList<CPCommandMsg> pendingCommands;
     Random rnd;
+    HashMap<Integer, ArrayList<CPCommandMsg>> pendingCommands;
+    private int numSuccessfulCommands;
 
     private enum cp_role {
         CLIENT, COOKIE, COMMAND
@@ -60,7 +64,8 @@ public class CPProtocol extends Protocol {
             this.cookie_lifetime_ms = cookie_lifetime_ms == null ? COOKIE_LIFETIME_MS : cookie_lifetime_ms;
         } else {
             this.role = cp_role.COMMAND;
-            this.pendingCommands = new ArrayList<CPCommandMsg>();
+            this.pendingCommands = new HashMap<>();
+            this.numSuccessfulCommands = 0;
         }
     }
 
@@ -156,17 +161,88 @@ public class CPProtocol extends Protocol {
         }
     }
 
-    // Only CookieCommandMsg are processed, all others are ignored
-    private Msg command_process(CPMsg cpmIn) throws IWProtocolException, IOException {
-        if (cpmIn instanceof CPCommandMsg cmdMsg) {
-            String cmdAndMsgFields = cmdMsg.getData();
-            if (cmdAndMsgFields != "status" && !cmdAndMsgFields.startsWith("print "))
-                throw new IllegalMsgException();
+    /**
+     * Verify a pending command given a cookie verification response for the same
+     * cookie as contained in the pending command message. Also send the appropriate
+     * command response to the client based on the verification result.
+     */
+    private CPCommandMsg verifyPendingCommand(CPCommandMsg pendingCmd,
+            CPCookieVerRespMsg ckVerRespMsg) throws IOException, IWProtocolException {
+        int pendingCmdId = pendingCmd.getId();
+        CPCommandResponseMsg respMsg;
 
-            CPCookieVerReqMsg verReqMsg = new CPCookieVerReqMsg(cmdMsg.getCookie());
-            String toSend = verReqMsg.create((PhyConfiguration) cmdMsg.getConfiguration());
-            send(toSend, this.PhyConfigCookieServer);
-            this.pendingCommands.add(cmdMsg);
+        if (!ckVerRespMsg.getSuccess()) { // if cookie verification failed
+            respMsg = new CPCommandResponseMsg(pendingCmdId, false);
+            respMsg.create("Cookie verification failed. Please retry with a new cookie.");
+        } else {
+            switch (pendingCmd.getCommandType()) {
+                case STATUS:
+                    respMsg = new CPCommandResponseMsg(pendingCmdId, true);
+                    respMsg.create(
+                            this.numSuccessfulCommands,
+                            null // cookieTtl unknown by cmd server
+                    );
+                    break;
+                case PRINT:
+                    respMsg = new CPCommandResponseMsg(pendingCmdId, true);
+                    respMsg.create("");
+                    break;
+                default:
+                    respMsg = new CPCommandResponseMsg(pendingCmdId, false);
+                    respMsg.create("Unknown command.");
+                    break;
+            }
+        }
+
+        // Send response to client.
+        String toSend = respMsg.getData();
+        send(toSend, pendingCmd.getConfiguration());
+
+        if (respMsg.getSuccess()) {
+            this.numSuccessfulCommands++;
+            return pendingCmd;
+        }
+        return null;
+    }
+
+    private Msg command_process(CPMsg cpmIn) throws IWProtocolException, IOException {
+        PhyConfiguration confIn = (PhyConfiguration) cpmIn.getConfiguration();
+
+        if (cpmIn instanceof CPCommandMsg cmdMsg) { // process command message
+            if (cmdMsg.getCommandType() == CommandType.UNKNOWN)
+                throw new IllegalCommandException();
+
+            int cookie = cmdMsg.getCookie();
+            CPCookieVerReqMsg verReqMsg = new CPCookieVerReqMsg(cookie);
+            String toSend = verReqMsg.create(confIn);
+            send(toSend, this.PhyConfigCookieServer); // send cookie verification request to cookie server
+
+            // Store pending command (in the hash map by cookie) to be processed upon cookie
+            // verification response.
+            this.pendingCommands.computeIfAbsent(cookie, k -> new ArrayList<>()).add(cmdMsg);
+        } else if (cpmIn instanceof CPCookieVerRespMsg ckVerRespMsg) {// process cookie verification response
+            if (!confIn.equals(this.PhyConfigCookieServer)) { // if not from cookie server, do not process
+                throw new UnauthorizedVerificationException();
+            }
+
+            int cookie = ckVerRespMsg.getCookie();
+            ArrayList<CPCommandMsg> pendingCmdsForCk = this.pendingCommands.get(cookie);
+            if (pendingCmdsForCk == null) { // if no pending commands for cookie
+                throw new NoSuchCookieException();
+            }
+
+            for (Iterator<CPCommandMsg> it = pendingCmdsForCk.iterator(); it.hasNext();) {
+                CPCommandMsg pendingCmd = it.next();
+                CPCommandMsg verifiedCmd = verifyPendingCommand(pendingCmd, ckVerRespMsg);
+                it.remove(); // remove pending command
+
+                if (pendingCmdsForCk.isEmpty()) {
+                    this.pendingCommands.remove(cookie); // remove cookie entry if no more pending commands
+                }
+                if (verifiedCmd != null) { // if pending command was successfully verified
+                    return verifiedCmd; // return verified command to the application
+                }
+            }
         }
         return new CPMsg();
     }
