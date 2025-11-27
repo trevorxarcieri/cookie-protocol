@@ -233,8 +233,8 @@ public class CPProtocol extends Protocol {
 
             for (Iterator<CPCommandMsg> it = pendingCmdsForCk.iterator(); it.hasNext();) {
                 CPCommandMsg pendingCmd = it.next();
-                CPCommandMsg verifiedCmd = verifyPendingCommand(pendingCmd, ckVerRespMsg);
                 it.remove(); // remove pending command
+                CPCommandMsg verifiedCmd = verifyPendingCommand(pendingCmd, ckVerRespMsg);
 
                 if (pendingCmdsForCk.isEmpty()) {
                     this.pendingCommands.remove(cookie); // remove cookie entry if no more pending commands
