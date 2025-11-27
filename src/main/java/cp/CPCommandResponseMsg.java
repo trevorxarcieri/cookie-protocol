@@ -1,11 +1,14 @@
 package cp;
 
+import com.google.gson.Gson;
+
 import core.Msg;
 import exceptions.IWProtocolException;
 import exceptions.IllegalMsgException;
 
 public class CPCommandResponseMsg extends CPMsg {
     protected static final String CP_CMD_RESP_HEADER = "command_response";
+    private static final Gson GSON = new Gson();
     protected int id;
     protected boolean success;
 
@@ -13,8 +16,11 @@ public class CPCommandResponseMsg extends CPMsg {
         super();
     }
 
-    protected CPCommandResponseMsg(int id, boolean success) {
+    protected CPCommandResponseMsg(int id, boolean success) throws IllegalMsgException {
         super();
+        if (id > 65535 || id < 0) {
+            throw new IllegalMsgException();
+        }
         this.id = id;
         this.success = success;
     }
@@ -41,6 +47,12 @@ public class CPCommandResponseMsg extends CPMsg {
         super.create(data);
     }
 
+    protected String create(int numSuccessfulCommands, Integer cookieTtl) {
+        CookieStatus status = new CookieStatus(numSuccessfulCommands, cookieTtl);
+        create(GSON.toJson(status));
+        return this.getData();
+    }
+
     @Override
     protected Msg parse(String sentence) throws IWProtocolException {
         if (!sentence.startsWith(CP_CMD_RESP_HEADER)) {
@@ -56,10 +68,19 @@ public class CPCommandResponseMsg extends CPMsg {
         } catch (NumberFormatException e) {
             throw new IllegalMsgException();
         }
+        if (this.id > 65535 || this.id < 0) {
+            throw new IllegalMsgException();
+        }
         this.success = parts[2].equals("ok");
 
         this.data = super.getMsgField(sentence, parts, true);
 
         return this;
     }
+}
+
+record CookieStatus(
+        int numSuccessfulCommands,
+        Integer cookieTtl // null = N/A
+) {
 }
