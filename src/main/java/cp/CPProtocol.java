@@ -135,7 +135,7 @@ public class CPProtocol extends Protocol {
                         if (((PhyConfiguration) in.getConfiguration()).getPid() != proto_id.CP) // if not CP protocol
                             continue;
                         resMsg = ((CPMsg) resMsg).parse(in);
-                        if (resMsg instanceof CPCookieRequestMsg) {
+                        if (resMsg instanceof CPCookieRequestMsg || resMsg instanceof CPCookieVerReqMsg) {
                             cookie_process((CPMsg) resMsg);
                             return resMsg;
                         }
@@ -149,7 +149,7 @@ public class CPProtocol extends Protocol {
                         if (((PhyConfiguration) in.getConfiguration()).getPid() != proto_id.CP) // if not CP protocol
                             continue;
                         resMsg = ((CPMsg) resMsg).parse(in);
-                        if (resMsg instanceof CPCommandMsg || resMsg instanceof CPCookieResponseMsg) {
+                        if (resMsg instanceof CPCommandMsg || resMsg instanceof CPCookieVerRespMsg) {
                             Msg res = command_process((CPMsg) resMsg);
                             return res;
                         }
@@ -187,7 +187,7 @@ public class CPProtocol extends Protocol {
                     respMsg = new CPCommandResponseMsg(pendingCmdId, true);
                     respMsg.create("");
                     break;
-                default:
+                default: // never happens, because UNKNOWN commands are rejected before becoming pending
                     respMsg = new CPCommandResponseMsg(pendingCmdId, false);
                     respMsg.create("Unknown command.");
                     break;
