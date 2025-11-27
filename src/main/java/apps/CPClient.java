@@ -53,7 +53,11 @@ public class CPClient {
                 cp.send(sentence, null);
                 System.out.println("Command sent to server ... waiting for response");
                 String answer = cp.receive().getData();
-                System.out.println(answer);
+                if (answer == null) {
+                    System.out.println("Success!");
+                } else {
+                    System.out.println(answer);
+                }
             } catch (IWProtocolException | IOException e) {
                 System.out.println("Command not accepted by server ... try again");
             }
