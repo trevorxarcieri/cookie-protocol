@@ -4,12 +4,12 @@ import core.Msg;
 import exceptions.IWProtocolException;
 import exceptions.IllegalMsgException;
 
-public class CPCommandMsg extends CPMsg {
+class CPCommandMsg extends CPMsg {
     protected static final String CP_CMD_HEADER = "command";
     protected int id;
     private int cookie;
     private CommandType commandType;
-    private String msgField;
+    private String cmdAndMsgFields;
 
     protected CPCommandMsg() {
         super();
@@ -38,8 +38,8 @@ public class CPCommandMsg extends CPMsg {
         return this.commandType;
     }
 
-    public String getMsgField() {
-        return this.msgField;
+    public String getCmdAndMsgFields() {
+        return this.cmdAndMsgFields;
     }
 
     /*
@@ -75,12 +75,12 @@ public class CPCommandMsg extends CPMsg {
             throw new IllegalMsgException();
         }
 
-        this.data = super.getMsgField(sentence, parts, true);
-        if (this.data.equals("status")) {
+        this.cmdAndMsgFields = super.getMsgField(sentence, parts, true);
+        if (this.cmdAndMsgFields.equals("status")) {
             this.commandType = CommandType.STATUS;
-        } else if (this.data.startsWith("print ")) {
+        } else if (this.cmdAndMsgFields.startsWith("print ")) {
             this.commandType = CommandType.PRINT;
-            this.msgField = this.data.split("\\s+", 2)[1];
+            this.data = this.cmdAndMsgFields.split("\\s+", 2)[1];
         } else {
             this.commandType = CommandType.UNKNOWN;
         }

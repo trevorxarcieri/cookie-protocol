@@ -1,7 +1,6 @@
 package apps;
 
 import cp.CPProtocol;
-import cp.CPCommandMsg;
 import exceptions.IWProtocolException;
 import phy.PhyProtocol;
 
@@ -27,7 +26,7 @@ public class CPCommandServer {
         // Start server processing
         while (true) {
             try {
-                String msgField = ((CPCommandMsg) cp.receive()).getMsgField();
+                String msgField = cp.receive().getData();
                 if (msgField != null) {
                     System.out.println(msgField);
                 }
