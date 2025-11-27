@@ -6,6 +6,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "CPCommandServer",
+      "request": "launch",
+      "mainClass": "apps.CPCommandServer",
+      "projectName": "internetworkings_hands_on"
+    },
+    {
+      "type": "java",
       "name": "Current File",
       "request": "launch",
       "mainClass": "${file}"
