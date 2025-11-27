@@ -39,6 +39,17 @@ class CPCookieResponseMsg extends CPMsg {
         super.create(data);
     }
 
+    /**
+     * Create a successful cookie response message containing the given cookie.
+     * Return the string data of the message.
+     */
+    protected String create(Cookie ck) {
+        this.success = true;
+        this.cookie = ck.getCookieValue();
+        create(Integer.toString(this.cookie));
+        return this.getData();
+    }
+
     protected Msg parse(String sentence) throws IllegalMsgException {
         if (!sentence.startsWith(CP_CRES_HEADER)) {
             throw new IllegalMsgException();

@@ -171,19 +171,13 @@ public class CPProtocol extends Protocol {
         return new CPMsg();
     }
 
-    private void evict_expired_cookies() {
+    private void evictExpiredCookies() {
         long curTime = System.currentTimeMillis();
         for (Entry<PhyConfiguration, Cookie> e : this.cookieMap.entrySet()) {
             if (curTime > e.getValue().getTimeOfCreation() + this.cookie_lifetime_ms) {
                 this.cookieMap.remove(e.getKey());
             }
         }
-    }
-
-    private void send_cookie_resp(Cookie ck, PhyConfiguration conf) throws IWProtocolException, IOException {
-        CPCookieResponseMsg resp = new CPCookieResponseMsg(true);
-        resp.create("" + ck.getCookieValue());
-        send(resp.getData(), conf);
     }
 
     /**
@@ -197,13 +191,13 @@ public class CPProtocol extends Protocol {
      * state.
      */
     private void cookie_process(CPMsg cpmIn) throws IWProtocolException, IOException {
-        evict_expired_cookies(); // evict old cookies to make room for the upcoming new cookie if possible
+        evictExpiredCookies(); // evict old cookies to make room for the upcoming new cookie if possible
 
         PhyConfiguration conf = (PhyConfiguration) cpmIn.getConfiguration();
 
         if (cookieMap.containsKey(conf)) { // if client already has a valid cookie, resend it
             Cookie ck = cookieMap.get(conf);
-            send_cookie_resp(ck, conf);
+            send(new CPCookieResponseMsg().create(ck), conf);
             return;
         }
 
@@ -219,7 +213,7 @@ public class CPProtocol extends Protocol {
             cookieVal = rnd.nextInt() & 0x7FFFFFFF; // ensure cookie value is positive
         } while (cookieMap.containsValue(new Cookie(0, cookieVal))); // ensure cookie value is unique
         Cookie ck = new Cookie(System.currentTimeMillis(), cookieVal); // create cookie
-        send_cookie_resp(ck, conf); // send cookie response
+        send(new CPCookieResponseMsg().create(ck), conf); // send cookie response
         cookieMap.put(conf, ck); // add cookie to hash map
     }
 
