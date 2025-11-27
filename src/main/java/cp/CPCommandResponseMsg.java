@@ -1,6 +1,7 @@
 package cp;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import core.Msg;
 import exceptions.IWProtocolException;
@@ -8,7 +9,7 @@ import exceptions.IllegalMsgException;
 
 public class CPCommandResponseMsg extends CPMsg {
     protected static final String CP_CMD_RESP_HEADER = "command_response";
-    private static final Gson GSON = new Gson();
+    public static final Gson GSON = new GsonBuilder().serializeNulls().create();
     protected int id;
     protected boolean success;
 
