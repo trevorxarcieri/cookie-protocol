@@ -296,12 +296,12 @@ public class CPProtocol extends Protocol {
             PhyConfiguration clientConf = ckVerReqMsg.getClientConfiguration();
 
             CPCookieVerRespMsg respMsg;
-            if (!cookieMap.containsKey(clientConf)) { // if no such client exists
+            if (!cookieMap.containsKey(clientConf)) { // if the client does not have a valid cookie
                 respMsg = new CPCookieVerRespMsg(clientCookie, false);
-                respMsg.create("No such client.");
-            } else if (cookieMap.get(clientConf).getCookieValue() != clientCookie) { // if cookie does not match
+                respMsg.create("The client does not have a valid cookie.");
+            } else if (cookieMap.get(clientConf).getCookieValue() != clientCookie) { // if cookie is incorrect
                 respMsg = new CPCookieVerRespMsg(clientCookie, false);
-                respMsg.create("Cookie does not match.");
+                respMsg.create("The client's cookie is incorrect.");
             } else { // cookie is valid
                 respMsg = new CPCookieVerRespMsg(clientCookie, true);
                 respMsg.create("");
