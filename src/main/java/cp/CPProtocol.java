@@ -207,7 +207,7 @@ public class CPProtocol extends Protocol {
         PhyConfiguration confIn = (PhyConfiguration) cpmIn.getConfiguration();
 
         if (cpmIn instanceof CPCommandMsg cmdMsg) { // process command message
-            if (cmdMsg.getCommandType() == CommandType.UNKNOWN)
+            if (cmdMsg.getCommandType() == CPCommandMsg.CommandType.UNKNOWN)
                 throw new IllegalCommandException();
 
             int clientCookie = cmdMsg.getCookie();

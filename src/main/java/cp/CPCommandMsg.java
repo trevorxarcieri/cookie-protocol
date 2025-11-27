@@ -4,12 +4,18 @@ import core.Msg;
 import exceptions.IWProtocolException;
 import exceptions.IllegalMsgException;
 
-class CPCommandMsg extends CPMsg {
+public class CPCommandMsg extends CPMsg {
     protected static final String CP_CMD_HEADER = "command";
     protected int id;
     private int cookie;
     private CommandType commandType;
     private String cmdAndMsgFields;
+
+    public enum CommandType {
+        STATUS,
+        PRINT,
+        UNKNOWN
+    }
 
     protected CPCommandMsg() {
         super();
@@ -87,10 +93,4 @@ class CPCommandMsg extends CPMsg {
 
         return this;
     }
-}
-
-enum CommandType {
-    STATUS,
-    PRINT,
-    UNKNOWN
 }
