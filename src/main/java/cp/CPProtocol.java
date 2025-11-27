@@ -99,8 +99,6 @@ public class CPProtocol extends Protocol {
 
     @Override
     public Msg receive() throws IOException, IWProtocolException {
-        Msg recMsg = new CPMsg();
-
         switch (this.role) {
             case CLIENT:
                 int i = 0;
@@ -109,7 +107,7 @@ public class CPProtocol extends Protocol {
                         Msg in = this.PhyProto.receive(CP_TIMEOUT);
                         if (((PhyConfiguration) in.getConfiguration()).getPid() != proto_id.CP) // if not CP protocol
                             continue; // do not count this as a try
-                        recMsg = ((CPMsg) recMsg).parse(in.getData());
+                        Msg recMsg = new CPMsg().parse(in.getData());
                         if (recMsg instanceof CPCommandResponseMsg
                                 && ((CPCommandResponseMsg) recMsg).getId() == this.id - 1) {
                             if (!((CPCommandResponseMsg) recMsg).getSuccess())
@@ -134,7 +132,7 @@ public class CPProtocol extends Protocol {
                         Msg in = this.PhyProto.receive();
                         if (((PhyConfiguration) in.getConfiguration()).getPid() != proto_id.CP) // if not CP protocol
                             continue;
-                        recMsg = ((CPMsg) recMsg).parse(in);
+                        Msg recMsg = new CPMsg().parse(in);
                         if (recMsg instanceof CPCookieRequestMsg || recMsg instanceof CPCookieVerReqMsg) {
                             cookie_process((CPMsg) recMsg);
                             return recMsg;
@@ -148,7 +146,7 @@ public class CPProtocol extends Protocol {
                         Msg in = this.PhyProto.receive();
                         if (((PhyConfiguration) in.getConfiguration()).getPid() != proto_id.CP) // if not CP protocol
                             continue;
-                        recMsg = ((CPMsg) recMsg).parse(in);
+                        Msg recMsg = new CPMsg().parse(in);
                         if (recMsg instanceof CPCommandMsg || recMsg instanceof CPCookieVerRespMsg) {
                             Msg res = command_process((CPMsg) recMsg);
                             return res;
