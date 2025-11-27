@@ -58,7 +58,7 @@ public class CPCommandResponseMsg extends CPMsg {
         }
         this.success = parts[2].equals("ok");
 
-        this.data = super.getMsgField(sentence, parts);
+        this.data = super.getMsgField(sentence, parts, true);
 
         return this;
     }

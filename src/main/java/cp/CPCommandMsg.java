@@ -52,7 +52,7 @@ class CPCommandMsg extends CPMsg {
             throw new IllegalMsgException();
         }
 
-        this.data = super.getMsgField(sentence, parts);
+        this.data = super.getMsgField(sentence, parts, true);
 
         return this;
     }

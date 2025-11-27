@@ -61,35 +61,41 @@ class CPMsg extends Msg {
 
     /**
      * Get the message field from the WS-delimited parts of a CPMsg, checking
-     * message length and CRC.
+     * CRC and, optionally, message length.
      * 
-     * Such a message field is defined as a part of the CPMSg between the length
+     * Such a message field is defined as a part of the CPMSg between some other
      * field and the checksum field (separated from each by whitespace).
      * Importantly, this means that for a command message (which has fields command
-     * and message between length and checksum), the message field will include both
-     * command and message. If the message field is empty, null is returned.
+     * and message between length and checksum), the returned "message field" will
+     * include both the actual command and message fields. If this message field as
+     * defined here is empty, null is returned.
      * 
-     * The message field must be of the length specified in the length field, and
-     * the checksum of the full CPMsg message must match the checksum field.
+     * The checksum of the full CPMsg message must match the checksum field. If
+     * checkLength is true, the message field must be of the length specified
+     * in the length field, which is expected to be the field before the message.
      */
-    protected static String getMsgField(String fullMsg, String[] parts)
+    protected static String getMsgField(String fullMsg, String[] parts, boolean checkLength)
             throws IllegalMsgException, BadChecksumException {
-        if (parts.length < 2) // at least length and msg/crc fields must be present
+        // If checking length, at least length and msg/crc fields must be present,
+        // otherwise at least msg/crc fields.
+        if ((checkLength && parts.length < 2) || parts.length < 1)
             throw new IllegalMsgException();
 
         int crcIndex = parts[parts.length - 1].lastIndexOf(" ");
         String msgField = (crcIndex != -1) ? parts[parts.length - 1].substring(0, crcIndex).trim() : "";
         String crcField = parts[parts.length - 1].substring(crcIndex + 1);
 
-        try {
-            int len = Integer.parseInt(parts[parts.length - 2]);
-            if (len < 0)
+        if (checkLength) {
+            try {
+                int len = Integer.parseInt(parts[parts.length - 2]);
+                if (len < 0)
+                    throw new IllegalMsgException();
+                if (len != msgField.length()) { // if length field does not match message length
+                    throw new IllegalMsgException(); // message is illegal, so fail
+                }
+            } catch (NumberFormatException e) {
                 throw new IllegalMsgException();
-            if (len != msgField.length()) { // if length field does not match message length
-                throw new IllegalMsgException(); // message is illegal, so fail
             }
-        } catch (NumberFormatException e) {
-            throw new IllegalMsgException();
         }
 
         long receivedCrc;
