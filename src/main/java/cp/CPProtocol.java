@@ -157,13 +157,15 @@ public class CPProtocol extends Protocol {
     }
 
     // Only CookieCommandMsg are processed, all others are ignored
-    private Msg command_process(CPMsg cpmIn) throws IWProtocolException {
+    private Msg command_process(CPMsg cpmIn) throws IWProtocolException, IOException {
         if (cpmIn instanceof CPCommandMsg cmdMsg) {
             String cmdAndMsgFields = cmdMsg.getData();
             if (cmdAndMsgFields != "status" && !cmdAndMsgFields.startsWith("print "))
                 throw new IllegalMsgException();
 
-            // send(new CookieVerificationMsg(), this.PhyConfigCookieServer);
+            CPCookieVerReqMsg verReqMsg = new CPCookieVerReqMsg(cmdMsg.getCookie());
+            String toSend = verReqMsg.create((PhyConfiguration) cmdMsg.getConfiguration());
+            send(toSend, this.PhyConfigCookieServer);
             this.pendingCommands.add(cmdMsg);
         }
         return new CPMsg();
