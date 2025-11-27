@@ -70,7 +70,7 @@ public class BaseNetworkTest {
         return assertDoesNotThrow(() -> {
             MethodHandles.Lookup l = MethodHandles.privateLookupIn(CPProtocol.class,
                     MethodHandles.lookup());
-            VarHandle vh = l.findVarHandle(CPProtocol.class, "numSuccessfulCommands", HashMap.class);
+            VarHandle vh = l.findVarHandle(CPProtocol.class, "numSuccessfulCommands", int.class);
             return (int) vh.get(cProtocol);
         });
     }
