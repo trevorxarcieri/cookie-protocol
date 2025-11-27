@@ -257,14 +257,16 @@ public class CPProtocol extends Protocol {
     }
 
     /**
-     * Process a cookie request from a client.
+     * Process an incoming message to the cookie server. This includes cookie
+     * requests from clients and cookie verification requests from command
+     * servers.
      * 
-     * Cookie renewal is idempotent: if the client requests a cookie while its
-     * current cookie is still valid, the cookie server just returns the existing
-     * cookie. This simplifies client retries (they can always request again on
-     * failure), avoids unnecessary growth in issued cookies, and aligns with
-     * typical web API design where repeated requests do not create unnecessary new
-     * state.
+     * Client cookie renewal is idempotent: if the client requests a cookie while
+     * its current cookie is still valid, the cookie server just returns the
+     * existing cookie. This simplifies client retries (they can always request
+     * again on failure), avoids unnecessary growth in issued cookies, and aligns
+     * with typical web API design where repeated requests do not create unnecessary
+     * new state.
      */
     private void cookie_process(CPMsg cpmIn) throws IWProtocolException, IOException {
         evictExpiredCookies(); // evict old cookies to make room for the upcoming new cookie if possible
