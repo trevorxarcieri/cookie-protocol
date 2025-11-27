@@ -59,6 +59,9 @@ class CPCommandMsg extends CPMsg {
         } catch (NumberFormatException e) {
             throw new IllegalMsgException();
         }
+        if (this.id > 65535 || this.id < 0) {
+            throw new IllegalMsgException();
+        }
 
         this.data = super.getMsgField(sentence, parts, true);
 
