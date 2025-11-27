@@ -269,29 +269,47 @@ public class CPProtocol extends Protocol {
      * new state.
      */
     private void cookie_process(CPMsg cpmIn) throws IWProtocolException, IOException {
-        evictExpiredCookies(); // evict old cookies to make room for the upcoming new cookie if possible
+        evictExpiredCookies(); // make room for new cookie, or remove stale cookies so they are invalid
         PhyConfiguration confIn = (PhyConfiguration) cpmIn.getConfiguration();
 
-        if (cookieMap.containsKey(confIn)) { // if client already has a valid cookie, resend it
-            Cookie ck = cookieMap.get(confIn);
-            send(new CPCookieResponseMsg().create(ck), confIn);
-            return;
-        }
+        if (cpmIn instanceof CPCookieRequestMsg) {
+            if (cookieMap.containsKey(confIn)) { // if client already has a valid cookie, resend it
+                Cookie ck = cookieMap.get(confIn);
+                send(new CPCookieResponseMsg().create(ck), confIn);
+                return;
+            }
 
-        if (cookieMap.size() >= maxNumClients) { // if hashmap is full, deny cookie request
-            CPCookieResponseMsg resp = new CPCookieResponseMsg(false);
-            resp.create("Max number of clients currently have a valid cookie. Please try again later.");
-            send(resp.getData(), confIn);
-            return;
-        }
+            if (cookieMap.size() >= maxNumClients) { // if hashmap is full, deny cookie request
+                CPCookieResponseMsg resp = new CPCookieResponseMsg(false);
+                resp.create("Max number of clients currently have a valid cookie. Please try again later.");
+                send(resp.getData(), confIn);
+                return;
+            }
 
-        int cookieVal;
-        do {
-            cookieVal = rnd.nextInt() & 0x7FFFFFFF; // ensure cookie value is positive
-        } while (cookieMap.containsValue(new Cookie(0, cookieVal))); // ensure cookie value is unique
-        Cookie ck = new Cookie(System.currentTimeMillis(), cookieVal); // create cookie
-        send(new CPCookieResponseMsg().create(ck), confIn); // send cookie response
-        cookieMap.put(confIn, ck); // add cookie to hash map
+            int cookieVal;
+            do {
+                cookieVal = rnd.nextInt() & 0x7FFFFFFF; // ensure cookie value is positive
+            } while (cookieMap.containsValue(new Cookie(0, cookieVal))); // ensure cookie value is unique
+            Cookie ck = new Cookie(System.currentTimeMillis(), cookieVal); // create cookie
+            send(new CPCookieResponseMsg().create(ck), confIn); // send cookie response
+            cookieMap.put(confIn, ck); // add cookie to hash map
+        } else if (cpmIn instanceof CPCookieVerReqMsg ckVerReqMsg) {
+            int clientCookie = ckVerReqMsg.getCookie();
+            PhyConfiguration clientConf = ckVerReqMsg.getClientConfiguration();
+
+            CPCookieVerRespMsg respMsg;
+            if (!cookieMap.containsKey(clientConf)) { // if no such client exists
+                respMsg = new CPCookieVerRespMsg(clientCookie, false);
+                respMsg.create("No such client.");
+            } else if (cookieMap.get(clientConf).getCookieValue() != clientCookie) { // if cookie does not match
+                respMsg = new CPCookieVerRespMsg(clientCookie, false);
+                respMsg.create("Cookie does not match.");
+            } else { // cookie is valid
+                respMsg = new CPCookieVerRespMsg(clientCookie, true);
+                respMsg.create("");
+            }
+            send(respMsg.getData(), confIn); // send cookie verification response
+        }
     }
 
     // Method for the client to request a cookie
