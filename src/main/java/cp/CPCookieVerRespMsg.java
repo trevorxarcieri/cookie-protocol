@@ -54,11 +54,13 @@ class CPCookieVerRespMsg extends CPMsg {
             throw new IllegalMsgException();
         }
 
-        if (!this.success) {
+        if (!this.success) { // if successful, split off length field and check it
             parts = sentence.split("\\s+", 5);
             if (parts.length < 5)
                 throw new IllegalMsgException();
             this.data = super.getMsgField(sentence, parts, true);
+        } else { // otherwise just check CRC
+            this.data = super.getMsgField(sentence, parts, false);
         }
 
         return this;
