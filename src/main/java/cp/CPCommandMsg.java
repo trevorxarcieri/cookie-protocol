@@ -4,13 +4,16 @@ import core.Msg;
 import exceptions.IWProtocolException;
 import exceptions.IllegalMsgException;
 
-class CPCommandMsg extends CPMsg {
+public class CPCommandMsg extends CPMsg {
     protected static final String CP_CMD_HEADER = "command";
     protected int id;
     private int cookie;
+    private CommandType commandType;
+    private String msgField;
 
     protected CPCommandMsg() {
         super();
+        this.commandType = CommandType.UNKNOWN;
     }
 
     protected CPCommandMsg(int id, int cookie) throws IllegalMsgException {
@@ -20,6 +23,7 @@ class CPCommandMsg extends CPMsg {
         }
         this.id = id;
         this.cookie = cookie;
+        this.commandType = CommandType.UNKNOWN;
     }
 
     public int getId() {
@@ -28,6 +32,14 @@ class CPCommandMsg extends CPMsg {
 
     public int getCookie() {
         return this.cookie;
+    }
+
+    public CommandType getCommandType() {
+        return this.commandType;
+    }
+
+    public String getMsgField() {
+        return this.msgField;
     }
 
     /*
@@ -64,7 +76,21 @@ class CPCommandMsg extends CPMsg {
         }
 
         this.data = super.getMsgField(sentence, parts, true);
+        if (this.data.equals("status")) {
+            this.commandType = CommandType.STATUS;
+        } else if (this.data.startsWith("print ")) {
+            this.commandType = CommandType.PRINT;
+            this.msgField = this.data.split("\\s+", 2)[1];
+        } else {
+            this.commandType = CommandType.UNKNOWN;
+        }
 
         return this;
     }
+}
+
+enum CommandType {
+    STATUS,
+    PRINT,
+    UNKNOWN
 }
