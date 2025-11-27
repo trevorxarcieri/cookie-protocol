@@ -58,7 +58,7 @@ public class CPClientAndCkServIntTest extends BaseNetworkTest {
                 this.commandServerPort,
                 UdpTestPeer.recv("phy 7 cp command 0 \\d+ 6 status \\d+"),
                 UdpTestPeer.send(
-                        "phy 7 cp command_response 0 ok 53 {numSuccessfullyProcessedCommands: 1, cookieTtlS: 40} 3491006493",
+                        "phy 7 cp command_response 0 ok 41 {numSuccessfulCommands: 1, cookieTtl: 40} 2489738685",
                         this.addr, this.clientPort))) {
             Thread ckServThread = runAsync(() -> ckServCpP.receive());
             Thread clientThread = runAsync(() -> clientCpP.send("status", null));
@@ -68,7 +68,7 @@ public class CPClientAndCkServIntTest extends BaseNetworkTest {
             assertInstanceOf(CPCommandResponseMsg.class, result);
             assertEquals(((CPCommandResponseMsg) result).getId(), 0);
             assertEquals(((CPCommandResponseMsg) result).getSuccess(), true);
-            assertEquals(result.getData(), "{numSuccessfullyProcessedCommands: 1, cookieTtlS: 40}");
+            assertEquals(result.getData(), "{numSuccessfulCommands: 1, cookieTtl: 40}");
         }
     }
 
