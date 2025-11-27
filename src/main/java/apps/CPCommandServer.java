@@ -26,9 +26,9 @@ public class CPCommandServer {
         // Start server processing
         while (true) {
             try {
-                String msgField = cp.receive().getData();
-                if (msgField != null) {
-                    System.out.println(msgField);
+                String commandMsg = cp.receive().getData();
+                if (commandMsg != null) {
+                    System.out.println(commandMsg);
                 }
             } catch (IOException e) {
                 System.out.println("IO error");
