@@ -29,8 +29,8 @@ public class CPProtocol extends Protocol {
     private static final int COOKIE_LIFETIME_MS = 60000;
     private int cookie;
     private int id;
-    private int max_num_clients;
-    private int cookie_lifetime_ms;
+    private int maxNumClients;
+    private int cookieLifetimeMs;
     private PhyConfiguration PhyConfigCommandServer;
     private PhyConfiguration PhyConfigCookieServer;
     private final PhyProtocol PhyProto;
@@ -54,14 +54,14 @@ public class CPProtocol extends Protocol {
     }
 
     // Constructors for servers
-    public CPProtocol(PhyProtocol phyP, boolean isCookieServer, Integer max_num_clients, Integer cookie_lifetime_ms) {
+    public CPProtocol(PhyProtocol phyP, boolean isCookieServer, Integer maxNumClients, Integer cookieLifetimeMs) {
         this.PhyProto = phyP;
         if (isCookieServer) {
             this.role = cp_role.COOKIE;
             this.cookieMap = new HashMap<>();
             this.rnd = new Random();
-            this.max_num_clients = max_num_clients == null ? CP_HASHMAP_SIZE : max_num_clients;
-            this.cookie_lifetime_ms = cookie_lifetime_ms == null ? COOKIE_LIFETIME_MS : cookie_lifetime_ms;
+            this.maxNumClients = maxNumClients == null ? CP_HASHMAP_SIZE : maxNumClients;
+            this.cookieLifetimeMs = cookieLifetimeMs == null ? COOKIE_LIFETIME_MS : cookieLifetimeMs;
         } else {
             this.role = cp_role.COMMAND;
             this.pendingCommands = new HashMap<>();
@@ -250,7 +250,7 @@ public class CPProtocol extends Protocol {
     private void evictExpiredCookies() {
         long curTime = System.currentTimeMillis();
         for (Entry<PhyConfiguration, Cookie> e : this.cookieMap.entrySet()) {
-            if (curTime > e.getValue().getTimeOfCreation() + this.cookie_lifetime_ms) {
+            if (curTime > e.getValue().getTimeOfCreation() + this.cookieLifetimeMs) {
                 this.cookieMap.remove(e.getKey());
             }
         }
@@ -277,7 +277,7 @@ public class CPProtocol extends Protocol {
             return;
         }
 
-        if (cookieMap.size() >= max_num_clients) { // if hashmap is full, deny cookie request
+        if (cookieMap.size() >= maxNumClients) { // if hashmap is full, deny cookie request
             CPCookieResponseMsg resp = new CPCookieResponseMsg(false);
             resp.create("Max number of clients currently have a valid cookie. Please try again later.");
             send(resp.getData(), conf);
