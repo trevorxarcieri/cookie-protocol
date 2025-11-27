@@ -19,6 +19,14 @@ class CPCookieVerRespMsg extends CPMsg {
         this.success = success;
     }
 
+    public int getCookie() {
+        return this.cookie;
+    }
+
+    public boolean getSuccess() {
+        return this.success;
+    }
+
     @Override
     protected void create(String data) {
         data = CP_CK_VER_RESP_HEADER + " " + (this.success ? "ok" : "error") + " " + this.cookie;
