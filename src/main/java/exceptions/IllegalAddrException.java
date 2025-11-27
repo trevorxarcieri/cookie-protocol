@@ -1,7 +1,5 @@
 package exceptions;
 
-import exceptions.IWProtocolException;
-
 public class IllegalAddrException extends IWProtocolException {
 
 	/**
