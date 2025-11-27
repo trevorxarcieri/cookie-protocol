@@ -45,7 +45,7 @@ public class CPClient {
                 System.out.println("Command: ");
                 sentence = inFromUser.readLine();
                 // Currently only these two commands are supported by the specification
-                if (!(sentence.equals("status") || sentence.startsWith("print"))) {
+                if (!(sentence.equals("status") || sentence.startsWith("print "))) {
                     System.out.println("Only these two commands are supported: status, print \"text\"");
                     continue;
                 }
