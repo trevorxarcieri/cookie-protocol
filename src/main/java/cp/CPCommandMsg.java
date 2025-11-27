@@ -22,6 +22,14 @@ class CPCommandMsg extends CPMsg {
         this.cookie = cookie;
     }
 
+    public int getId() {
+        return this.id;
+    }
+
+    public int getCookie() {
+        return this.cookie;
+    }
+
     /*
      * Create command message.
      * The cp header is prepended in the super-class.
