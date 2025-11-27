@@ -1,6 +1,7 @@
 package apps;
 
 import cp.CPProtocol;
+import cp.CPCommandMsg;
 import exceptions.IWProtocolException;
 import phy.PhyProtocol;
 
@@ -26,9 +27,9 @@ public class CPCommandServer {
         // Start server processing
         while (true) {
             try {
-                String rec = cp.receive().getData();
-                if (rec != null) {
-                    System.out.println(rec);
+                String msgField = ((CPCommandMsg) cp.receive()).getMsgField();
+                if (msgField != null) {
+                    System.out.println(msgField);
                 }
             } catch (IOException e) {
                 System.out.println("IO error");
