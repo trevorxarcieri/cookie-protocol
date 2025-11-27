@@ -27,17 +27,23 @@ class CPMsg extends Msg {
 
         String msgType = parts[1].split("\\s+", 2)[0];
         switch (msgType) {
+            case CPCommandMsg.CP_CMD_HEADER:
+                parsedMsg = new CPCommandMsg();
+                break;
+            case CPCommandResponseMsg.CP_CMD_RESP_HEADER:
+                parsedMsg = new CPCommandResponseMsg();
+                break;
             case CPCookieRequestMsg.CP_CREQ_HEADER:
                 parsedMsg = new CPCookieRequestMsg();
                 break;
             case CPCookieResponseMsg.CP_CRES_HEADER:
                 parsedMsg = new CPCookieResponseMsg();
                 break;
-            case CPCommandMsg.CP_CMD_HEADER:
-                parsedMsg = new CPCommandMsg();
+            case CPCookieVerReqMsg.CP_CK_VER_REQ_HEADER:
+                parsedMsg = new CPCookieVerReqMsg();
                 break;
-            case CPCommandResponseMsg.CP_CMD_RESP_HEADER:
-                parsedMsg = new CPCommandResponseMsg();
+            case CPCookieVerRespMsg.CP_CK_VER_RESP_HEADER:
+                parsedMsg = new CPCookieVerRespMsg();
                 break;
             default:
                 throw new IllegalMsgException();
