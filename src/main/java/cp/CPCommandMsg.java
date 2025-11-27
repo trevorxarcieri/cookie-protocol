@@ -42,7 +42,7 @@ class CPCommandMsg extends CPMsg {
         }
 
         String[] parts = sentence.split("\\s+", 5);
-        if (parts.length < 6)
+        if (parts.length < 5)
             throw new IllegalMsgException();
 
         try {
