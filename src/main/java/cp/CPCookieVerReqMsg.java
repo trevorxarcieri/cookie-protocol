@@ -25,6 +25,10 @@ class CPCookieVerReqMsg extends CPMsg {
         this.cookie = cookie;
     }
 
+    public int getCookie() {
+        return this.cookie;
+    }
+
     @Override
     protected void create(String data) {
         data = CP_CK_VER_REQ_HEADER + " " + this.cookie + " " + data;
