@@ -29,10 +29,8 @@ class CPCookieVerRespMsg extends CPMsg {
 
     @Override
     protected void create(String data) {
-        data = CP_CK_VER_RESP_HEADER + " " + (this.success ? "ok" : "error") + " " + this.cookie;
-        if (!success) {
-            data += " " + data.length() + " " + data;
-        }
+        data = CP_CK_VER_RESP_HEADER + " " + (this.success ? "ok" : "error") + " " + this.cookie
+                + (success ? "" : " " + data.length() + " " + data);
         data += " " + super.getCrc(data);
         super.create(data);
     }
