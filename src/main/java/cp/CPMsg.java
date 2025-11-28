@@ -6,7 +6,7 @@ import exceptions.IWProtocolException;
 import exceptions.IllegalMsgException;
 import java.util.zip.CRC32;
 
-class CPMsg extends Msg {
+public class CPMsg extends Msg {
     protected static final String CP_HEADER = "cp";
 
     @Override
@@ -59,7 +59,7 @@ class CPMsg extends Msg {
         return ret;
     }
 
-    protected static long getCrc(String data) {
+    public static long getCrc(String data) {
         CRC32 crc32 = new CRC32();
         crc32.update(data.getBytes());
         return crc32.getValue();
